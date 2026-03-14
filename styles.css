@@ -1,0 +1,257 @@
+:root {
+    --bg: #0a0b0e;
+    --sidebar-bg: #0f1115;
+    --panel: #161920;
+    --accent: #e63946;
+    --accent-dim: #7a1f26;
+    --text: #f1f1f1;
+    --subtext: #64748b;
+    --border: #242933;
+}
+
+/* --- ESTRUCTURA BASE --- */
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, sans-serif;
+    margin: 0;
+    display: flex; /* Flexbox para manejar el layout */
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 300px;
+    min-width: 300px;
+    height: 100vh;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    position: relative;
+}
+
+/* Estado Cerrado: Se oculta desplazando su propio ancho */
+.sidebar.closed {
+    margin-left: -300px;
+}
+.sidebar.closed ~ .menu-toggle {
+    right: 20px;
+}
+.sidebar-header {
+    padding: 30px 20px;
+    border-bottom: 1px solid var(--border);
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    color: var(--text);
+    margin: 0;
+}
+.logo span { color: var(--accent); }
+
+.nav-section {
+    padding: 20px 0;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.section-title {
+    padding: 0 25px;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--subtext);
+    margin-bottom: 15px;
+}
+
+.nav-item {
+    padding: 12px 25px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--subtext);
+    transition: 0.2s;
+    border-left: 3px solid transparent;
+    font-size: 0.9rem;
+}
+
+.nav-item:hover, .nav-item.active {
+    background: rgba(255,255,255,0.03);
+    color: var(--text);
+}
+.nav-item.active { 
+    border-left-color: var(--accent); 
+    color: var(--accent); 
+    background: rgba(230, 57, 70, 0.05);
+}
+
+/* --- BOTÓN TOGGLE --- */
+.menu-toggle {
+   position: fixed;
+    top: 20px;
+    right: 20px; /* Cámbialo a la derecha para que no estorbe al logo */
+    left: auto;  /* Elimina el left que tenías */
+    z-index: 1100;
+    background: var(--accent);
+    color: white;
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(230, 57, 70, 0.4);
+    transition: transform 0.2s;
+}
+
+.menu-toggle:hover {
+    transform: scale(1.1);
+}
+
+/* --- CONTENIDO PRINCIPAL --- */
+.main-content {
+    flex-grow: 1;
+    height: 100vh;
+    overflow-y: auto;
+    position: relative;
+    background-image: radial-gradient(circle at 50% 50%, #1a1d23 0%, #0a0b0e 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centra el hero y el grid */
+}
+
+.vignette {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: radial-gradient(circle, transparent 40%, rgba(0,0,0,0.7) 100%);
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* --- HERO & GRID (Los estilos que se habían perdido) --- */
+.hero {
+    padding: 100px 60px 40px;
+    width: 100%;
+    max-width: 900px;
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.hero h1 {
+    font-size: 3.5rem;
+    font-weight: 900;
+    line-height: 0.9;
+    letter-spacing: -2px;
+    margin-bottom: 20px;
+    color: var(--text);
+}
+
+.hero p {
+    font-size: 1.1rem;
+    color: var(--subtext);
+    line-height: 1.6;
+}
+
+.grid-tracks {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 30px;
+    padding: 0 60px 60px;
+    width: 100%;
+    max-width: 1200px;
+    box-sizing: border-box;
+}
+
+.track-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    padding: 30px;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.track-card:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: var(--accent);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.track-tag {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.track-card h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    color: var(--text);
+}
+
+.track-card p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--subtext);
+}
+
+.track-card.locked {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(1);
+    border-style: dashed;
+}
+
+/* --- RESPONSIVO (Pantallas pequeñas) --- */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        top: 0;
+        /* En móvil, el estado "abierto" es left: 0 */
+        left: 0; 
+        margin-left: 0; /* Reset del margen de escritorio */
+    }
+
+    /* En móvil, el estado "cerrado" es left negativo */
+    .sidebar.closed {
+        left: -300px;
+        margin-left: 0;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+        width: 100vw;
+    }
+    .hero, .grid-tracks { padding: 80px 20px 40px; }
+}
+
+.measure-box {
+    background: #0a0b0e;
+    color: var(--accent);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-family: 'monospace';
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: 1px solid var(--border);
+    min-width: 60px;
+    text-align: center;
+    letter-spacing: 1px;
+}
+

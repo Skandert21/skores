@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKores - Visor</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.8.1/dist/alphaTab.min.js"></script>
+    
+    <style>
+        :root {
+            --bg: #0a0b0e;
+            --sidebar-bg: #0f1115;
+            --panel: #161920;
+            --accent: #e63946;
+            --text: #f1f1f1;
+            --subtext: #64748b;
+            --border: #242933;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        header {
+            padding: 30px 0 10px;
+            text-align: center;
+            width: 100%;
+        }
+
+        header h1 {
+            font-size: 1.2rem;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: var(--text);
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        /* --- PANEL DE CONTROL --- */
+        .master-panel {
+            background: var(--panel);
+            width: 95%;
+            max-width: 1100px;
+            padding: 12px 20px;
+            border-radius: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            margin: 20px 0;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-main {
+            background: #2d333f;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 800;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-main:hover {
+            background: #3d4452;
+            transform: translateY(-2px);
+        }
+
+        #play-pause-btn {
+            background: var(--accent);
+            min-width: 90px;
+        }
+
+        #play-pause-btn:hover {
+            background: #ff4d5a;
+            box-shadow: 0 0 15px rgba(230, 57, 70, 0.4);
+        }
+
+        /* --- BARRA DE INSTRUMENTOS --- */
+        .instrument-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-inst {
+            background: transparent;
+            border: 1px solid #3d4452;
+            color: var(--subtext);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .btn-inst:hover {
+            border-color: var(--subtext);
+            color: var(--text);
+        }
+
+        .btn-inst.active {
+            background: var(--text);
+            color: var(--bg);
+            border-color: var(--text);
+            font-weight: 700;
+        }
+
+        /* --- ALPHATAB --- */
+        #alphaTab {
+            width: 95%;
+            max-width: 1100px;
+            margin-bottom: 80px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white; /* Importante para que la partitura sea legible */
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        /* --- LOADER --- */
+        #loader-container {
+            padding: 60px;
+            text-align: center;
+            color: var(--subtext);
+        }
+
+        .spinner {
+            margin: 0 auto 20px;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* --- FOOTER FLOTANTE --- */
+        .sticky-footer {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: rgba(22, 25, 32, 0.9);
+            padding: 8px 15px;
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+        }
+
+        .quick-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--subtext);
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .btn-footer {
+            background: transparent;
+            border: none;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 0;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .master-panel {
+                flex-direction: column;
+                width: 100%;
+                border-radius: 0;
+                top: 0;
+            }
+            #alphaTab { width: 100%; }
+        }
+        /* Score Area - AlphaTab */
+ 
+/* --- ALPHATAB & CURSOR VISUAL --- */
+        #alphaTab {
+            position: relative;  /* INDISPENSABLE para la barra roja */
+            width: 95%;
+            max-width: 1100px;
+            margin-bottom: 80px;
+            border-radius: 8px;
+            overflow: hidden; /* Mantiene el cursor dentro de los bordes redondeados */
+            background: white;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            min-height: 400px;
+            display: block;
+        }
+
+   /* Mejora del cursor para que destaque sobre el blanco de la partitura */
+.at-cursor-bar {
+    background: #e63946 !important; /* Rojo sólido */
+    width: 3px !important;
+    opacity: 0.9 !important;
+    z-index: 1000 !important;
+    pointer-events: none;
+    box-shadow: 0 0 8px rgba(230, 57, 70, 0.5); /* Sutil brillo rockero */
+}
+
+/* Estado visual del botón de bloqueo en el footer */
+.btn-footer.active {
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(230, 57, 70, 0.4);
+}
+
+        /* --- RESPONSIVO --- */
+        @media (max-width: 768px) {
+            .master-panel {
+                flex-direction: column;
+                width: 100%;
+                border-radius: 0;
+                top: 0;
+            }
+            #alphaTab { width: 100%; border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Skores</h1>
+    </header>
+
+    <div class="master-panel">
+        <div class="control-group">
+            <a href="index.html" class="btn-main" style="text-decoration: none; background: transparent; border: 1px solid var(--border);  z-index: 1001 !important;">
+                🏠 INICIO
+            </a>
+        </div>
+        
+        <div class="control-group">
+            <button class="btn-main" id="play-pause-btn">▶ PLAY</button>
+            <button class="btn-main" id="stop-btn">⏹ STOP</button>
+        </div>
+
+        <div class="instrument-bar" id="track-list">
+            </div>
+    </div>
+
+    <div id="loader-container">
+        <div class="spinner"></div>
+        <p id="loading-text">Invocando partitura...</p>
+    </div>
+
+    <div id="alphaTab"></div>
+
+    <div class="sticky-footer">
+        <div class="quick-controls">
+            <button class="btn-footer" id="lock-scroll-footer" title="Fijar Vista">🔓</button>
+            <span class="footer-label">Auto-Scroll</span>
+        </div>
+    </div>
+
+    <script src="main.js" type="text/javascript"></script>
+</body>
+</html>

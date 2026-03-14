@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKores | Biblioteca de Partituras</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles-ver.css">
+    <style>
+        header h1::after {
+    content: "|";
+    margin-left: 5px;
+    color: var(--accent);
+    animation: parpadeo 0.8s infinite;
+}
+
+@keyframes parpadeo {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+    </style>
+    <style type="text/css">
+/* --- Títulos Principales (Álbumes/Carpetas) --- */
+/* Mantenemos el botón aquí porque es un elemento de control del acordeón, no un link */
+.folder-btn {
+    width: 100%;
+    padding: 20px 15px 10px 15px;
+    background: transparent;
+    color: #6a7282;
+    border: none;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color 0.3s ease;
+    display: flex;
+    justify-content: space-between;
+    font-family: inherit;
+}
+
+.folder-btn:hover {
+    color: #94a3b8;
+}
+
+/* --- Contenedor de Canciones --- */
+.sub-menu {
+    max-height: 0;
+    overflow: hidden;
+    /* Reducimos el tiempo a 0.3s y usamos una curva más agresiva para el cierre */
+    transition: max-height 0.3s cubic-bezier(0, 1, 0, 1); 
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+}
+
+.sub-menu.open {
+    max-height: 500px; /* Un valor más ajustado a 10-15 canciones */
+    opacity: 1;
+    /* Cuando se abre, usamos una curva que se siente más suave */
+    transition: max-height 0.5s ease-in-out, opacity 0.3s ease;
+}
+
+/* --- Las Canciones --- */
+.track-item {
+    display: block;
+    text-decoration: none;
+    width: 100%;
+    padding: 15px 20px;
+    background: transparent;
+    color: #6a7282;
+    border-left: 4px solid transparent;
+    text-align: left;
+    font-size: 0.95rem;
+    transition: all 0.2s ease; /* Transición rápida para el hover */
+    box-sizing: border-box;
+}
+
+/* Hover y Activo */
+.track-item:hover, .track-item.active {
+    background: rgba(230, 57, 70, 0.15);
+    border-left: 4px solid #e63946;
+    color: #ff4d5a;
+}
+
+/* Estado Disabled (Cuando la URL es #) */
+.track-item.disabled {
+    color: #333 !important; /* Gris muy oscuro/apagado */
+    background: transparent !important;
+    border-left: 4px solid transparent !important;
+    cursor: default; /* Cursor normal, no de link */
+    pointer-events: none; /* Bloquea cualquier click por seguridad */
+    opacity: 0.6;
+}
+
+/* Solo aplicar el hover de color rojo a los que NO están disabled */
+.track-item:not(.disabled):hover {
+    background: rgba(230, 57, 70, 0.15);
+    border-left: 4px solid #e63946;
+    color: #ff4d5a;
+}
+    </style>
+</head>
+<body>
+
+    <div class="vignette"></div>
+    
+    
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header"><button class="menu-toggle" id="menu-toggle">☰</button>
+            <h2 class="logo"><span>SK</span>ORES</h2>
+        </div>
+        
+       <div id="track-list"></div>
+
+     
+    </aside>
+
+    <main class="main-content">
+        <section class="hero">
+            <h1 id="terminal-title"></h1>
+            <p>
+                Hola, acabas de encontrar <strong>SKores</strong>. Un repositorio donde guardo mis composiciones y transcripciones.
+            </p>
+        </section>
+
+        <div class="grid-tracks">
+            <a href="ver.html?track=circo-dramaturgo/desperte-llorando/El-vacio-y-la-muerte-no-son-algo-literal-son-solo-una-analogia" class="track-card">
+                <span class="track-tag">Opus I</span>
+                <h3>El Vacío y la Muerte...</h3>
+                <p>No son algo literal, son solo una analogía.</p>
+            </a>
+
+            <div class="track-card locked">
+                <span class="track-tag">Opus II</span>
+                <h3>Teatros</h3>
+                <p>Bloqueado hasta la fase de documentación.</p>
+            </div>
+
+            </div>
+    </main>
+
+    <script>
+  const menuToggle = document.getElementById('menu-toggle');
+const sidebar = document.getElementById('sidebar');
+
+menuToggle.onclick = () => {
+    // Alternamos la clase 'closed' en lugar de 'open'
+    sidebar.classList.toggle('closed');
+    
+    // Cambiamos el icono según el estado
+    if (sidebar.classList.contains('closed')) {
+        menuToggle.innerText = '☰';
+    } else {
+        menuToggle.innerText = '✕';
+    }
+};
+
+// Lógica para móviles: cerrar si se detecta pantalla pequeña al cargar
+if (window.innerWidth <= 768) {
+    sidebar.classList.add('closed');
+}
+    </script>
+
+    <script type="text/javascript"> document.addEventListener('DOMContentLoaded', () => {
+    const frasesHumor = [
+        "TORRE<br>DE BABEL (BETA)",
+        "ALEJANDRÍA<br>SIN RESPALDO",
+        "EL MANUSCRITO<br>QUE NO COMPILA",
+        "MARCOS PEREZ JIMENEZ<br>TENÍA FIBRA ÓPTICA",
+        "TODO ESCRITO,<br>NADA LEÍDO",
+        "CERO DÍAS<br>SIN UN span class='bug-visual'>BUG</span>", // Clase especial aquí
+        "SOLO DIOS<br>Y YO SABEMOS QUE",
+        "INGRESE<br>UN TEXTO",
+        "DANTE<br>USABA STACKOVERFLOW",
+        "SE INFORMA<br>QUE EL DIA DE MAÑANA",
+        "PERGAMINO<br>404 NOT FOUND"
+    ];
+
+    const headerTitle = document.getElementById('terminal-title');
+    if (!headerTitle) return;
+
+    const frase = frasesHumor[Math.floor(Math.random() * frasesHumor.length)];
+    let i = 0;
+    headerTitle.innerHTML = ""; 
+
+    function escribir() {
+        // Lógica para saltar etiquetas HTML y que no se escriban letra por letra
+        if (frase.charAt(i) === "<") {
+            let tag = "";
+            while (frase.charAt(i) !== ">" && i < frase.length) {
+                tag += frase.charAt(i);
+                i++;
+            }
+            tag += ">";
+            i++;
+            headerTitle.innerHTML += tag;
+        } else {
+            headerTitle.innerHTML += frase.charAt(i);
+            i++;
+        }
+
+        if (i < frase.length) {
+            setTimeout(escribir, 70);
+        }
+    }
+
+    escribir();
+});
+    </script><script type="text/javascript">
+ 
+async function cargarAcordeon() {
+    const contenedor = document.getElementById('track-list');
+    if (!contenedor) return;
+
+    try {
+        const respuesta = await fetch('library.json');
+        const secciones = await respuesta.json();
+
+        contenedor.innerHTML = '';
+
+        Object.keys(secciones).forEach(titulo => {
+            const folder = document.createElement('button');
+            folder.className = 'folder-btn';
+            folder.innerHTML = `<span>${titulo}</span> <span class="arrow">▼</span>`;
+            
+            const subMenu = document.createElement('div');
+            subMenu.className = 'sub-menu';
+
+            folder.onclick = () => {
+                const isOpen = subMenu.classList.toggle('open');
+                const arrow = folder.querySelector('.arrow');
+                if (arrow) arrow.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+            };
+
+            secciones[titulo].forEach(track => {
+                const link = document.createElement('a');
+                link.innerText = track.nombre;
+                
+                // --- El IF que controla si está disabled ---
+                if (track.url === "#") {
+                    link.className = 'track-item disabled';
+                    // No le asignamos href, así no es un link real
+                } else {
+                    link.className = 'track-item'; 
+                    link.href = `ver.html?track=${track.url}`;
+                }
+
+                subMenu.appendChild(link);
+            });
+
+            contenedor.appendChild(folder);
+            contenedor.appendChild(subMenu);
+        });
+    } catch (error) {
+        console.error("Error cargando el JSON:", error);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', cargarAcordeon);
+ 
+</script>
+
+</body>
+</html>
