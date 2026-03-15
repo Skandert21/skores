@@ -93,19 +93,33 @@ const at = new alphaTab.AlphaTabApi(el, {
         // 5. Intentamos colapsar voces para evitar que se peleen
         enableAllVoices: true,
         minimizeAllVoices: true
+        extendBendArrowsOnTiedNotes: false
+        rhythmMode: 'Hidden'
     }
 });
 
 const progress = new Map();
 
 function updateLoadingIndicator() {
-    // ... tu lógica de % ...
+    let loaded = 0;
+    let total = 0;
+    progress.forEach(value => {
+        loaded += value.loaded;
+        total += value.total;
+    });
+
+    const percent = Math.floor((loaded / total) * 100);
+    const progressVal = isNaN(percent) ? 0 : percent;
+
+    if (loadingText) {
+        loadingText.innerText = `Sincronizando instrumentos... ${progressVal}%`;
+    }
+
     if(total === loaded && total > 0) {
+        console.log('--- Instrumentos listos ---');
         if (loaderContainer) loaderContainer.style.display = 'none'; 
-        if (playPause) {
-            playPause.style.opacity = "1";
-            playPause.innerText = "▶ PLAY";
-        }
+        playPause.style.opacity = "1";
+        playPause.innerText = "▶ PLAY";
     }
 }
 
@@ -132,56 +146,23 @@ function loadSoundFont(url) {
 
 // --- 4. EVENTOS DE ALPHATAB ---
 
- at.scoreLoaded.on(score => {
-    // A. Metadatos (Inmediato)
-    if (songDetails) {
-        const t = songDetails.querySelector('.title');
-        const a = songDetails.querySelector('.artist');
-        if (t) t.innerText = score.title || '';
-        if (a) a.innerText = score.artist || '';
-    }
-
-    // B. UI de Pistas (Inmediato)
-    const trackList = document.getElementById('track-list');
-    if (trackList) {
-        trackList.innerHTML = '';
-        score.tracks.forEach((track) => {
-            const btn = document.createElement('button');
-            btn.className = 'btn-inst';
-            btn.innerText = track.name || `Pista ${track.index + 1}`;
-            btn.onclick = () => {
-                at.renderTracks([track]);
-                document.querySelectorAll('.btn-inst').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            };
-            trackList.appendChild(btn);
-        });
-    }
-
-    // C. Estética (Modificamos el modelo directamente)
-    const black = alphaTab.model.Color.fromJson("#000000");
-    const transparent = alphaTab.model.Color.fromJson("#00000000");
-    
-    score.tracks.forEach(track => {
-        track.staves.forEach(staff => {
-            staff.bars.forEach(bar => {
-                bar.voices.forEach(voice => {
-                    voice.beats.forEach(beat => {
-                        beat.style = beat.style || new alphaTab.model.BeatStyle();
-                        beat.style.colors.set(alphaTab.model.BeatSubElement.GuitarTabRests, transparent);
-                        beat.notes.forEach(note => {
-                            note.style = note.style || new alphaTab.model.NoteStyle();
-                            note.style.colors.set(alphaTab.model.NoteSubElement.GuitarTabFretNumber, black);
-                            note.style.colors.set(alphaTab.model.NoteSubElement.StandardNotationNoteHead, black);
-                        });
-                    });
-                });
-            });
-        });
-    });
-
-    // D. Carga de Sonido (Esto disparará el updateLoadingIndicator al terminar)
+at.scoreLoaded.on(score => {
+    aplicarColoresNegros(score);
     loadSoundFont('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
+    
+    const trackList = document.getElementById('track-list');
+    trackList.innerHTML = '';
+    score.tracks.forEach((track) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-inst';
+        btn.innerText = track.name || `Pista ${track.index + 1}`;
+        btn.onclick = () => {
+            at.renderTracks([track]);
+            document.querySelectorAll('.btn-inst').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        };
+        trackList.appendChild(btn);
+    });
 });
 
 at.playerStateChanged.on((args) => {
@@ -190,13 +171,13 @@ at.playerStateChanged.on((args) => {
 
 // --- 5. CONTROLES DE INTERFAZ ---
 
-playPause.onclick = e => {
+playPause.onclick = async e => {
     e.preventDefault();
-    if (at.player && at.player.api && at.player.api.audioContext) {
-        if (at.player.api.audioContext.state === 'suspended') {
-            at.player.api.audioContext.resume();
-        }
+
+    if (at.player?.api?.audioContext?.state === 'suspended') {
+        await at.player.api.audioContext.resume();
     }
+
     at.playPause();
 };
 
