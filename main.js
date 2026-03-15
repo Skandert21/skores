@@ -97,7 +97,7 @@ const at = new alphaTab.AlphaTabApi(el, {
         enableAllVoices: true,
         minimizeAllVoices: true,
         extendBendArrowsOnTiedNotes: false,
-        rhythmMode: 'Hidden'
+       
     }
 });
  
@@ -135,7 +135,7 @@ function loadSoundFont(url) {
     request.onload = () => {
         if (request.status === 200) {
             const buffer = new Uint8Array(request.response);
-            at.loadSoundFont(buffer, true);
+            at.loadSoundFont(buffer);
         }
     };
     request.onprogress = e => {
@@ -153,6 +153,17 @@ at.scoreLoaded.on(score => {
     aplicarColoresNegros(score);
     loadSoundFont('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
     
+    score.tracks.forEach(track => {
+
+    if(track.name.toLowerCase().includes("bass")){
+        track.playbackInfo.program = 33;
+    }
+
+    if(track.name.toLowerCase().includes("guitar")){
+        track.playbackInfo.program = 25;
+    }
+at.render();
+});
       enableSmoothCursorScroll(at);
 
     const trackList = document.getElementById('track-list');
@@ -194,23 +205,22 @@ document.getElementById('stop-btn').onclick = () => {
 };
 
 const lockBtnFooter = document.getElementById('lock-scroll-footer');
-let autoScrollEnabled = true;
+
 
 const iconLocked = '🔒\uFE0E';
 const iconUnlocked = '🔓\uFE0E';
+let isScrollLocked = false;
+let isScrollLocked = false;
 
 lockBtnFooter.onclick = () => {
 
-    autoScrollEnabled = !autoScrollEnabled;
+    isScrollLocked = !isScrollLocked;
 
-    at.settings.display.autoScroll = autoScrollEnabled ? 1 : 0;
+    at.settings.display.autoScroll = isScrollLocked ? 0 : 1;
 
     at.updateSettings();
 
-    lockBtnFooter.innerText = autoScrollEnabled ? iconUnlocked : iconLocked;
-    lockBtnFooter.style.color = autoScrollEnabled ? "#666" : "#e63946";
-    lockBtnFooter.style.opacity = autoScrollEnabled ? "0.5" : "1";
-
+    lockBtnFooter.innerText = isScrollLocked ? iconLocked : iconUnlocked;
 };
 
 window.addEventListener('keydown', e => {
