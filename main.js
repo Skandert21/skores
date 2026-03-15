@@ -151,17 +151,29 @@ function loadSoundFont(url) {
 
 at.scoreLoaded.on(score => {
     aplicarColoresNegros(score);
+
+
     loadSoundFont('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
     
     score.tracks.forEach(track => {
 
-    if(track.name.toLowerCase().includes("bass")){
-        track.playbackInfo.program = 33;
-    }
+    if(track.playbackInfo){
 
-    if(track.name.toLowerCase().includes("guitar")){
-        track.playbackInfo.program = 25;
+        track.playbackInfo.bank = 0;
+
+        if(track.playbackInfo.program === 0){
+
+            if(track.name.toLowerCase().includes("guitar"))
+                track.playbackInfo.program = 30;
+
+            if(track.name.toLowerCase().includes("bass"))
+                track.playbackInfo.program = 34;
+
+        }
+
     }
+ 
+
 at.render();
 });
  
