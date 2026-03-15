@@ -330,51 +330,49 @@ function aplicarColoresNegros(score) {
 
 function autoMapInstruments(score){
 
-    score.tracks.forEach(track => {
+    let nextChannel = 0; // GM channels 0-15, 9 es batería
 
+    score.tracks.forEach(track => {
         if(!track.playbackInfo) return;
 
         const info = track.playbackInfo;
-
-        // Forzar General MIDI
         info.bank = 0;
 
         const name = (track.name || "").toLowerCase();
 
-        // Si el XML ya tiene instrumento válido, lo respetamos
-        if(info.program > 0) return;
-
-        if(name.includes("drum") || name.includes("perc")){
-            info.program = 0;
-            info.channel = 9; // canal GM de batería
-            return;
+        // 1️⃣ Asignar programa (instrumento) si es 0
+        if(info.program === 0){
+            if(name.includes("drum") || name.includes("perc")){
+                info.program = 0;
+            } else if(name.includes("bass")){
+                info.program = 34;
+            } else if(name.includes("guitar")){
+                info.program = 30;
+            } else if(name.includes("acoustic")){
+                info.program = 24;
+            } else if(name.includes("piano") || name.includes("keys")){
+                info.program = 0;
+            } else if(name.includes("violin") || name.includes("strings")){
+                info.program = 40;
+            }
         }
 
-        if(name.includes("bass")){
-            info.program = 34;
-            return;
+        // 2️⃣ Asignar canal si no existe
+        if(info.channel === undefined){
+            if(info.program === 0 && (name.includes("drum") || name.includes("perc"))){
+                info.channel = 9; // canal GM de batería
+            } else {
+                if(nextChannel === 9) nextChannel++; // saltar canal de batería
+                info.channel = nextChannel++;
+            }
         }
 
-        if(name.includes("guitar")){
-            info.program = 30;
-            return;
-        }
-
-        if(name.includes("acoustic")){
-            info.program = 24;
-            return;
-        }
-
-        if(name.includes("piano") || name.includes("keys")){
-            info.program = 0;
-            return;
-        }
-
-        if(name.includes("violin") || name.includes("strings")){
-            info.program = 40;
-            return;
-        }
-
+        // DEBUG
+        console.log(
+            "Track:", track.name,
+            "Program:", info.program,
+            "Bank:", info.bank,
+            "Channel:", info.channel
+        );
     });
-
 }
