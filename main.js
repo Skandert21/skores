@@ -71,22 +71,27 @@ const at = new alphaTab.AlphaTabApi(el, {
     display: {
         engine: 'svg',
         layoutMode: 'page',
-        // Dejamos que el motor decida el perfil pero forzamos los elementos
+        // No usamos staveProfile para que no sobreescriba nuestros ajustes
         elements: {
             scoreTitle: true,
             scoreSubTitle: false,
         }
     },
     notation: {
-        // Usamos los índices numéricos que alphaTab entiende perfectamente:
-        // 0 = Standard (Pentagrama), 1 = Tab (Tablatura)
+        // 1. Forzamos Pentagrama y Tablatura
         staveTypes: [0, 1], 
         
-        // Esto ELIMINA los silencios de la tablatura
+        // 2. Quitamos los silencios negros de la TAB (se verán en el pentagrama)
         rhythmMode: 'Hidden', 
         
-        // Evitamos que las voces secundarias ensucien la vista
-        enableAllVoices: false,
+        // 3. LA SOLUCIÓN AL GRIS: Forzamos opacidad total en voces inactivas
+        inactiveVoiceAlpha: 1.0, 
+        
+        // 4. Forzamos a que todas las voces sean negras
+        voiceColor: '#000000',
+
+        // 5. Intentamos colapsar voces para evitar que se peleen
+        enableAllVoices: true,
         minimizeAllVoices: true
     }
 });
