@@ -8,12 +8,16 @@
   "La Mancha": [
     { 
       "nombre": "Ni Una Negación Colérica Alcanzaría, Muestra Algo de Silencio", 
-      "url": "circo-dramaturgo/la-mancha/Ni%20Una%20Negaci%C3%B3n%20Col%C3%A9rica%20Alcanzar%C3%ADa%2C%20Muestra%20Algo%20de%20Silencio" 
+      "url": "circo-dramaturgo/la-mancha/Ni-Una-Negacion-Colerica-Alcanzaria-Muestra-Algo-de-Silencio" 
     }
   ],
-  "Alógena": [
+  "Alógena": [ 
     { 
-      "nombre": "Track sin carpetas", 
+      "nombre": "Selva", 
+      "url": "alogena/Selva" 
+    },
+    { 
+      "nombre": "Track no disponible", 
       "url": "#" 
     }
   ]
