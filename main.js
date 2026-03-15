@@ -150,47 +150,62 @@ function loadSoundFont(url) {
 // --- 4. EVENTOS DE ALPHATAB ---
 
 at.scoreLoaded.on(score => {
+
     aplicarColoresNegros(score);
 
+    // Detectar instrumentos automáticamente
+    autoMapInstruments(score);
 
-    loadSoundFont('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
-    
+    // DEBUG para verificar instrumentos
     score.tracks.forEach(track => {
+        const info = track.playbackInfo;
+        console.log(
+            "Track:", track.name,
+            "Program:", info?.program,
+            "Bank:", info?.bank,
+            "Channel:", info?.channel
+        );
+    });
 
-    if(track.playbackInfo){
+    // Cargar SoundFont después del mapeo
+    loadSoundFont(
+        'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2'
+    );
 
-        track.playbackInfo.bank = 0;
+    // Renderizar partitura
+    at.render();
 
-        if(track.playbackInfo.program === 0){
-
-            if(track.name.toLowerCase().includes("guitar"))
-                track.playbackInfo.program = 30;
-
-            if(track.name.toLowerCase().includes("bass"))
-                track.playbackInfo.program = 34;
-
-        }
-
+    // Reconstruir sintetizador
+    if (at.player) {
+        at.player.rebuild();
     }
- 
 
-at.render();
-});
- 
-
+    // Crear lista de pistas
     const trackList = document.getElementById('track-list');
     trackList.innerHTML = '';
+
     score.tracks.forEach((track) => {
+
         const btn = document.createElement('button');
         btn.className = 'btn-inst';
         btn.innerText = track.name || `Pista ${track.index + 1}`;
+
         btn.onclick = () => {
+
             at.renderTracks([track]);
-            document.querySelectorAll('.btn-inst').forEach(b => b.classList.remove('active'));
+
+            document
+                .querySelectorAll('.btn-inst')
+                .forEach(b => b.classList.remove('active'));
+
             btn.classList.add('active');
+
         };
+
         trackList.appendChild(btn);
+
     });
+
 });
 
 at.playerStateChanged.on((args) => {
@@ -311,4 +326,55 @@ function aplicarColoresNegros(score) {
             });
         });
     });
+}
+
+function autoMapInstruments(score){
+
+    score.tracks.forEach(track => {
+
+        if(!track.playbackInfo) return;
+
+        const info = track.playbackInfo;
+
+        // Forzar General MIDI
+        info.bank = 0;
+
+        const name = (track.name || "").toLowerCase();
+
+        // Si el XML ya tiene instrumento válido, lo respetamos
+        if(info.program > 0) return;
+
+        if(name.includes("drum") || name.includes("perc")){
+            info.program = 0;
+            info.channel = 9; // canal GM de batería
+            return;
+        }
+
+        if(name.includes("bass")){
+            info.program = 34;
+            return;
+        }
+
+        if(name.includes("guitar")){
+            info.program = 30;
+            return;
+        }
+
+        if(name.includes("acoustic")){
+            info.program = 24;
+            return;
+        }
+
+        if(name.includes("piano") || name.includes("keys")){
+            info.program = 0;
+            return;
+        }
+
+        if(name.includes("violin") || name.includes("strings")){
+            info.program = 40;
+            return;
+        }
+
+    });
+
 }
