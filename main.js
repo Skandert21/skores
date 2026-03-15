@@ -103,26 +103,33 @@ function enableSmoothCursorScroll(api) {
 
     const container = document.querySelector('#alphaTab');
 
-    api.cursor.beatChanged.on(() => {
+    const waitForCursor = setInterval(() => {
 
-        if (isScrollLocked) return;
+        if (!api.cursor) return;
 
-        const cursorEl = container.querySelector('.at-cursor');
+        clearInterval(waitForCursor);
 
-        if (!cursorEl) return;
+        api.cursor.beatChanged.on(() => {
 
-        const cursorRect = cursorEl.getBoundingClientRect();
-        const containerRect = container.getBoundingClientRect();
+            if (isScrollLocked) return;
 
-        const cursorX = cursorRect.left - containerRect.left;
-        const target = cursorX - containerRect.width * 0.35;
+            const cursorEl = container.querySelector('.at-cursor');
+            if (!cursorEl) return;
 
-        container.scrollTo({
-            left: container.scrollLeft + target,
-            behavior: "smooth"
+            const cursorRect = cursorEl.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+
+            const cursorX = cursorRect.left - containerRect.left;
+            const target = cursorX - containerRect.width * 0.5;
+
+            container.scrollTo({
+                left: container.scrollLeft + target,
+                behavior: "smooth"
+            });
+
         });
 
-    });
+    }, 50);
 
 }
 const progress = new Map();
