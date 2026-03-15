@@ -115,7 +115,7 @@ at.scoreLoaded.on(score => {
     }
 
     // 4. Lógica de Estilos (Mata el gris y oculta silencios)
-    const black = alphaTab.model.Color.fromJson("#000000");
+  const black = alphaTab.model.Color.fromJson("#000000");
     const transparent = alphaTab.model.Color.fromJson("#00000000");
 
     score.tracks.forEach(track => {
@@ -123,13 +123,10 @@ at.scoreLoaded.on(score => {
             staff.bars.forEach(bar => {
                 bar.voices.forEach(voice => {
                     voice.beats.forEach(beat => {
-                        beat.style = new alphaTab.model.BeatStyle();
-                        // Ocultamos silencios en la TAB
+                        if (!beat.style) beat.style = new alphaTab.model.BeatStyle();
                         beat.style.colors.set(alphaTab.model.BeatSubElement.GuitarTabRests, transparent);
-                        
                         beat.notes.forEach(note => {
-                            note.style = new alphaTab.model.NoteStyle();
-                            // Forzamos negro sólido
+                            if (!note.style) note.style = new alphaTab.model.NoteStyle();
                             note.style.colors.set(alphaTab.model.NoteSubElement.GuitarTabFretNumber, black);
                             note.style.colors.set(alphaTab.model.NoteSubElement.StandardNotationNoteHead, black);
                         });
@@ -138,9 +135,6 @@ at.scoreLoaded.on(score => {
             });
         });
     });
-
-    // IMPORTANTE: No necesitas llamar a render() aquí si es la carga inicial, 
-    // pero si los colores no se aplican, usa: at.render();
 });
 const progress = new Map();
 
