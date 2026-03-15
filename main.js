@@ -60,6 +60,8 @@ async function cargarPartituraProtegida(url, key, api) {
 // --- 2. CONFIGURACIÓN DE ALPHATAB ---
 
 const at = new alphaTab.AlphaTabApi(el, {
+
+
     player: {
         enablePlayer: true,
         enableCursor: true, 
@@ -70,7 +72,7 @@ const at = new alphaTab.AlphaTabApi(el, {
     },
     display: {
         engine: 'svg',
-        layoutMode: 'page',
+       layoutMode: 'horizontal',
         // No usamos staveProfile para que no sobreescriba nuestros ajustes
         elements: {
             scoreTitle: true,
@@ -97,7 +99,32 @@ const at = new alphaTab.AlphaTabApi(el, {
         rhythmMode: 'Hidden'
     }
 });
+function enableSmoothCursorScroll(api) {
 
+    const container = document.querySelector('#alphaTab');
+
+    api.cursor.beatChanged.on(() => {
+
+        if (isScrollLocked) return;
+
+        const cursorEl = container.querySelector('.at-cursor');
+
+        if (!cursorEl) return;
+
+        const cursorRect = cursorEl.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+
+        const cursorX = cursorRect.left - containerRect.left;
+        const target = cursorX - containerRect.width * 0.35;
+
+        container.scrollTo({
+            left: container.scrollLeft + target,
+            behavior: "smooth"
+        });
+
+    });
+
+}
 const progress = new Map();
 
 function updateLoadingIndicator() {
@@ -150,6 +177,8 @@ at.scoreLoaded.on(score => {
     aplicarColoresNegros(score);
     loadSoundFont('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
     
+      enableSmoothCursorScroll(at);
+
     const trackList = document.getElementById('track-list');
     trackList.innerHTML = '';
     score.tracks.forEach((track) => {
@@ -193,30 +222,17 @@ let isScrollLocked = false;
 const iconLocked = '🔒\uFE0E'; 
 const iconUnlocked = '🔓\uFE0E';
 
-if (lockBtnFooter) {
-    lockBtnFooter.onclick = () => {
-        isScrollLocked = !isScrollLocked;
-        
-        // 1. Cambiamos la configuración (0 = off, 1 = center)
-        at.settings.display.autoScroll = isScrollLocked ? 0 : 1;
-        
-        // 2. Forzamos la actualización de ajustes
-        at.updateSettings();
- 
-        if (isScrollLocked) {
-            at.renderer.isAutoScrollEnabled = false; 
-        } else {
-            at.renderer.isAutoScrollEnabled = true;
-        }
+lockBtnFooter.onclick = () => {
 
-        // Feedback visual
-        lockBtnFooter.innerText = isScrollLocked ? iconLocked : iconUnlocked;
-        lockBtnFooter.style.color = isScrollLocked ? "#e63946" : "#666";
-        lockBtnFooter.style.opacity = isScrollLocked ? "1" : "0.5";
-        
-        console.log("Bloqueo de scroll:", isScrollLocked);
-    };
-}
+    isScrollLocked = !isScrollLocked;
+
+     
+
+    lockBtnFooter.innerText = isScrollLocked ? iconLocked : iconUnlocked;
+    lockBtnFooter.style.color = isScrollLocked ? "#e63946" : "#666";
+    lockBtnFooter.style.opacity = isScrollLocked ? "1" : "0.5";
+
+};
 window.addEventListener('keydown', e => {
     if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault();
