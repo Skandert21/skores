@@ -71,7 +71,7 @@ const at = new alphaTab.AlphaTabApi(el, {
     display: {
         engine: 'svg',
         layoutMode: 'page',
-        
+        staveProfile: 'Tab', // Muestra Pentagrama + Tablatura
         preserveEmptyStaves: false,
         beamGrouping: 'Standard',
         elements: {
