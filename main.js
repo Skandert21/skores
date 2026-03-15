@@ -164,7 +164,7 @@ at.scoreLoaded.on(score => {
     }
 at.render();
 });
-      enableSmoothCursorScroll(at);
+ 
 
     const trackList = document.getElementById('track-list');
     trackList.innerHTML = '';
