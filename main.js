@@ -92,8 +92,8 @@ const at = new alphaTab.AlphaTabApi(el, {
 
         // 5. Intentamos colapsar voces para evitar que se peleen
         enableAllVoices: true,
-        minimizeAllVoices: true
-        extendBendArrowsOnTiedNotes: false
+        minimizeAllVoices: true,
+        extendBendArrowsOnTiedNotes: false,
         rhythmMode: 'Hidden'
     }
 });
