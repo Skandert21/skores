@@ -147,7 +147,9 @@ function loadSoundFont(url) {
 // --- 4. EVENTOS DE ALPHATAB ---
 
 at.scoreLoaded.on(score => {
-  const details = document.querySelector('#song-details');
+    // 1. Prioridad: Metadatos (Para que aparezcan de inmediato)
+   
+    const details = document.querySelector('#song-details');
     if (!details) return;
 
     // Título y Artista (Lo que ya tienes)
@@ -164,7 +166,7 @@ at.scoreLoaded.on(score => {
     // Ejemplo: Mostrar el BPM en algún lado
     const tempoInfo = document.querySelector('#tempo-display');
     if (tempoInfo) tempoInfo.innerText = `${score.tempo} BPM`;
-});
+ 
     // 2. Prioridad: Sonido y UI
     loadSoundFont('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
     
