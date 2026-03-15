@@ -73,6 +73,7 @@ const at = new alphaTab.AlphaTabApi(el, {
     display: {
         engine: 'svg',
        layoutMode: 'page',
+        autoScroll: 1,
         // No usamos staveProfile para que no sobreescriba nuestros ajustes
         elements: {
             scoreTitle: true,
@@ -99,39 +100,7 @@ const at = new alphaTab.AlphaTabApi(el, {
         rhythmMode: 'Hidden'
     }
 });
-function enableSmoothCursorScroll(api) {
-
-    const container = document.querySelector('#alphaTab');
-
-    const waitForCursor = setInterval(() => {
-
-        if (!api.cursor) return;
-
-        clearInterval(waitForCursor);
-
-        api.cursor.beatChanged.on(() => {
-
-            if (isScrollLocked) return;
-
-            const cursorEl = container.querySelector('.at-cursor');
-            if (!cursorEl) return;
-
-            const cursorRect = cursorEl.getBoundingClientRect();
-            const containerRect = container.getBoundingClientRect();
-
-            const cursorX = cursorRect.left - containerRect.left;
-            const target = cursorX - containerRect.width * 0.5;
-
-            container.scrollTo({
-                left: container.scrollLeft + target,
-                behavior: "smooth"
-            });
-
-        });
-
-    }, 50);
-
-}
+ 
 const progress = new Map();
 
 function updateLoadingIndicator() {
@@ -225,21 +194,25 @@ document.getElementById('stop-btn').onclick = () => {
 };
 
 const lockBtnFooter = document.getElementById('lock-scroll-footer');
-let isScrollLocked = false;
-const iconLocked = '🔒\uFE0E'; 
+let autoScrollEnabled = true;
+
+const iconLocked = '🔒\uFE0E';
 const iconUnlocked = '🔓\uFE0E';
 
 lockBtnFooter.onclick = () => {
 
-    isScrollLocked = !isScrollLocked;
+    autoScrollEnabled = !autoScrollEnabled;
 
-     
+    at.settings.display.autoScroll = autoScrollEnabled ? 1 : 0;
 
-    lockBtnFooter.innerText = isScrollLocked ? iconLocked : iconUnlocked;
-    lockBtnFooter.style.color = isScrollLocked ? "#e63946" : "#666";
-    lockBtnFooter.style.opacity = isScrollLocked ? "1" : "0.5";
+    at.updateSettings();
+
+    lockBtnFooter.innerText = autoScrollEnabled ? iconUnlocked : iconLocked;
+    lockBtnFooter.style.color = autoScrollEnabled ? "#666" : "#e63946";
+    lockBtnFooter.style.opacity = autoScrollEnabled ? "0.5" : "1";
 
 };
+
 window.addEventListener('keydown', e => {
     if (e.code === 'Space' || e.key === ' ') {
         e.preventDefault();
