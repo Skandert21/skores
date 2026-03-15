@@ -210,7 +210,7 @@ const lockBtnFooter = document.getElementById('lock-scroll-footer');
 const iconLocked = '🔒\uFE0E';
 const iconUnlocked = '🔓\uFE0E';
 let isScrollLocked = false;
-let isScrollLocked = false;
+ 
 
 lockBtnFooter.onclick = () => {
 
