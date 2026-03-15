@@ -99,25 +99,13 @@ const at = new alphaTab.AlphaTabApi(el, {
 const progress = new Map();
 
 function updateLoadingIndicator() {
-    let loaded = 0;
-    let total = 0;
-    progress.forEach(value => {
-        loaded += value.loaded;
-        total += value.total;
-    });
-
-    const percent = Math.floor((loaded / total) * 100);
-    const progressVal = isNaN(percent) ? 0 : percent;
-
-    if (loadingText) {
-        loadingText.innerText = `Sincronizando instrumentos... ${progressVal}%`;
-    }
-
+    // ... tu lógica de % ...
     if(total === loaded && total > 0) {
-        console.log('--- Instrumentos listos ---');
         if (loaderContainer) loaderContainer.style.display = 'none'; 
-        playPause.style.opacity = "1";
-        playPause.innerText = "▶ PLAY";
+        if (playPause) {
+            playPause.style.opacity = "1";
+            playPause.innerText = "▶ PLAY";
+        }
     }
 }
 
@@ -144,55 +132,56 @@ function loadSoundFont(url) {
 
 // --- 4. EVENTOS DE ALPHATAB ---
 
-// --- 4. EVENTOS DE ALPHATAB ---
+ at.scoreLoaded.on(score => {
+    // A. Metadatos (Inmediato)
+    if (songDetails) {
+        const t = songDetails.querySelector('.title');
+        const a = songDetails.querySelector('.artist');
+        if (t) t.innerText = score.title || '';
+        if (a) a.innerText = score.artist || '';
+    }
 
-at.scoreLoaded.on(score => {
-    // 1. Prioridad: Metadatos (Para que aparezcan de inmediato)
-   
-    const details = document.querySelector('#song-details');
-    if (!details) return;
-
-    // Título y Artista (Lo que ya tienes)
-    details.querySelector('.title').innerText = score.title || 'Untitled';
-    details.querySelector('.artist').innerText = score.artist || 'Unknown Artist';
-
-    // Subtítulo y Álbum (Si los tienes en tu HTML)
-    const sub = details.querySelector('.subtitle');
-    if (sub) sub.innerText = score.subTitle || '';
-
-    const album = details.querySelector('.album');
-    if (album) album.innerText = score.album ? `Album: ${score.album}` : '';
-
-    // Ejemplo: Mostrar el BPM en algún lado
-    const tempoInfo = document.querySelector('#tempo-display');
-    if (tempoInfo) tempoInfo.innerText = `${score.tempo} BPM`;
- 
-    // 2. Prioridad: Sonido y UI
-    loadSoundFont('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
-    
+    // B. UI de Pistas (Inmediato)
     const trackList = document.getElementById('track-list');
-    trackList.innerHTML = '';
-    score.tracks.forEach((track) => {
-        const btn = document.createElement('button');
-        btn.className = 'btn-inst';
-        btn.innerText = track.name || `Pista ${track.index + 1}`;
-        btn.onclick = () => {
-            at.renderTracks([track]);
-            document.querySelectorAll('.btn-inst').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-        };
-        trackList.appendChild(btn);
+    if (trackList) {
+        trackList.innerHTML = '';
+        score.tracks.forEach((track) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-inst';
+            btn.innerText = track.name || `Pista ${track.index + 1}`;
+            btn.onclick = () => {
+                at.renderTracks([track]);
+                document.querySelectorAll('.btn-inst').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            };
+            trackList.appendChild(btn);
+        });
+    }
+
+    // C. Estética (Modificamos el modelo directamente)
+    const black = alphaTab.model.Color.fromJson("#000000");
+    const transparent = alphaTab.model.Color.fromJson("#00000000");
+    
+    score.tracks.forEach(track => {
+        track.staves.forEach(staff => {
+            staff.bars.forEach(bar => {
+                bar.voices.forEach(voice => {
+                    voice.beats.forEach(beat => {
+                        beat.style = beat.style || new alphaTab.model.BeatStyle();
+                        beat.style.colors.set(alphaTab.model.BeatSubElement.GuitarTabRests, transparent);
+                        beat.notes.forEach(note => {
+                            note.style = note.style || new alphaTab.model.NoteStyle();
+                            note.style.colors.set(alphaTab.model.NoteSubElement.GuitarTabFretNumber, black);
+                            note.style.colors.set(alphaTab.model.NoteSubElement.StandardNotationNoteHead, black);
+                        });
+                    });
+                });
+            });
+        });
     });
 
-    // 3. Aplicar estética (Sin bloquear el render inicial)
-    aplicarColoresNegros(score);
-    
-    // 4. Forzar una pequeña actualización para que el autoscroll y el player se enteren
-    setTimeout(() => { 
-        at.updateSettings(); 
-        // Solo llamamos a render si detectas que los números no se pusieron negros solos
-        // at.render(); 
-    }, 100);
+    // D. Carga de Sonido (Esto disparará el updateLoadingIndicator al terminar)
+    loadSoundFont('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
 });
 
 at.playerStateChanged.on((args) => {
