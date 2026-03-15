@@ -83,7 +83,7 @@ const at = new alphaTab.AlphaTabApi(el, {
    
         rhythmMode: 'ShowWithNotes', 
         enableAllVoices: true,
-        
+        staveTypes: ['Standard', 'Tab'],
         minimizeAllVoices: true 
     }
 });
