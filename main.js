@@ -86,18 +86,42 @@ const at = new alphaTab.AlphaTabApi(document.querySelector('#alphaTab'), {
 });
 
 at.scoreLoaded.on(score => {
-    // 1. Cargamos el sonido (esto corre en paralelo)
+    // 1. Detalles y SoundFont (Igual que antes)
     loadSoundFont('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
     
-    // 2. Llenamos los detalles (con seguridad de que existan los elementos)
     if (songDetails) {
         const titleEl = songDetails.querySelector('.title');
         const artistEl = songDetails.querySelector('.artist');
-        if (titleEl) titleEl.innerText = score.title || 'Sin título';
-        if (artistEl) artistEl.innerText = score.artist || 'Artista desconocido';
+        if (titleEl) titleEl.innerText = score.title || '';
+        if (artistEl) artistEl.innerText = score.artist || '';
     }
 
-    // 3. Generamos la lista de instrumentos
+    // 2. LÓGICA DE ESTILOS "SILENCIOSA"
+    // No creamos nuevos objetos Style si ya existen, solo añadimos los colores
+    const black = alphaTab.model.Color.fromJson("#000000");
+    const transparent = alphaTab.model.Color.fromJson("#00000000");
+
+    score.tracks.forEach(track => {
+        track.staves.forEach(staff => {
+            staff.bars.forEach(bar => {
+                bar.voices.forEach(voice => {
+                    voice.beats.forEach(beat => {
+                        // Usamos el estilo existente o creamos uno solo si es necesario
+                        beat.style = beat.style || new alphaTab.model.BeatStyle();
+                        beat.style.colors.set(alphaTab.model.BeatSubElement.GuitarTabRests, transparent);
+                        
+                        beat.notes.forEach(note => {
+                            note.style = note.style || new alphaTab.model.NoteStyle();
+                            note.style.colors.set(alphaTab.model.NoteSubElement.GuitarTabFretNumber, black);
+                            note.style.colors.set(alphaTab.model.NoteSubElement.StandardNotationNoteHead, black);
+                        });
+                    });
+                });
+            });
+        });
+    });
+
+    // 3. Generación de botones (Igual que antes)
     const trackList = document.getElementById('track-list');
     if (trackList) {
         trackList.innerHTML = '';
@@ -114,27 +138,8 @@ at.scoreLoaded.on(score => {
         });
     }
 
-    // 4. Lógica de Estilos (Mata el gris y oculta silencios)
-  const black = alphaTab.model.Color.fromJson("#000000");
-    const transparent = alphaTab.model.Color.fromJson("#00000000");
-
-    score.tracks.forEach(track => {
-        track.staves.forEach(staff => {
-            staff.bars.forEach(bar => {
-                bar.voices.forEach(voice => {
-                    voice.beats.forEach(beat => {
-                        if (!beat.style) beat.style = new alphaTab.model.BeatStyle();
-                        beat.style.colors.set(alphaTab.model.BeatSubElement.GuitarTabRests, transparent);
-                        beat.notes.forEach(note => {
-                            if (!note.style) note.style = new alphaTab.model.NoteStyle();
-                            note.style.colors.set(alphaTab.model.NoteSubElement.GuitarTabFretNumber, black);
-                            note.style.colors.set(alphaTab.model.NoteSubElement.StandardNotationNoteHead, black);
-                        });
-                    });
-                });
-            });
-        });
-    });
+    // IMPORTANTE: ELIMINAMOS EL at.render() Y EL setTimeout.
+    // AlphaTab debería aplicar estos cambios en su ciclo natural de carga.
 });
 const progress = new Map();
 
