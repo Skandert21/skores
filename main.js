@@ -72,7 +72,7 @@ const at = new alphaTab.AlphaTabApi(el, {
     },
     display: {
         engine: 'svg',
-       layoutMode: 'horizontal',
+       layoutMode: 'page',
         // No usamos staveProfile para que no sobreescriba nuestros ajustes
         elements: {
             scoreTitle: true,
