@@ -62,18 +62,31 @@ async function cargarPartituraProtegida(url, key, api) {
 const at = new alphaTab.AlphaTabApi(el, {
     player: {
         enablePlayer: true,
-        enableCursor: true, // ESTO activa la barra vertical
+        enableCursor: true, 
         enableUserInteraction: true
     },
     ui: {
-        cursorColor: "#e63946" // Puedes poner el color que quieras para la barra
+        cursorColor: "#e63946" 
     },
     display: {
-        engine: 'svg', // SVG suele ser más estable para el cursor que Canvas
-        layoutMode: 'page'
+        engine: 'svg',
+        layoutMode: 'page',
+        staveProfile: 'Score', // Muestra Pentagrama + Tablatura
+        preserveEmptyStaves: false,
+        beamGrouping: 'Standard',
+        elements: {
+            scoreTitle: true,
+            scoreSubTitle: false,
+        }
+    },
+    notation: {
+   
+        rhythmMode: 'ShowWithNotes', 
+        enableAllVoices: true,
+        
+        minimizeAllVoices: true 
     }
 });
-// --- 3. GESTIÓN DE INSTRUMENTOS (SOUNDFONT) ---
 
 const progress = new Map();
 
