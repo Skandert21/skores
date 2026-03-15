@@ -71,20 +71,23 @@ const at = new alphaTab.AlphaTabApi(el, {
     display: {
         engine: 'svg',
         layoutMode: 'page',
-        staveProfile: 'Tab', // Muestra Pentagrama + Tablatura
-        preserveEmptyStaves: false,
-        beamGrouping: 'Standard',
+        // Dejamos que el motor decida el perfil pero forzamos los elementos
         elements: {
             scoreTitle: true,
             scoreSubTitle: false,
         }
     },
     notation: {
-   
-        rhythmMode: 'ShowWithNotes', 
-        enableAllVoices: true,
-        staveTypes: ['Standard', 'Tab'],
-        minimizeAllVoices: true 
+        // Usamos los índices numéricos que alphaTab entiende perfectamente:
+        // 0 = Standard (Pentagrama), 1 = Tab (Tablatura)
+        staveTypes: [0, 1], 
+        
+        // Esto ELIMINA los silencios de la tablatura
+        rhythmMode: 'Hidden', 
+        
+        // Evitamos que las voces secundarias ensucien la vista
+        enableAllVoices: false,
+        minimizeAllVoices: true
     }
 });
 
