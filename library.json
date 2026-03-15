@@ -16,11 +16,11 @@
       "nombre": "Selva", 
       "url": "alogena/Selva" 
     },
-    ,
+  
     { 
       "nombre": "Contracorriente", 
       "url": "alogena/Contracorriente" 
-    }
+    },
     { 
       "nombre": "Track no disponible", 
       "url": "#" 
