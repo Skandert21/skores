@@ -21,6 +21,15 @@
       "nombre": "Contracorriente", 
       "url": "alogena/Contracorriente" 
     },
+      { 
+      "nombre": "Pumas", 
+      "url": "alogena/Pumas" 
+    },
+  
+    { 
+      "nombre": "Tocaremos el cielo", 
+      "url": "alogena/Tocaremos-el-cielo" 
+    },
     { 
       "nombre": "Track no disponible", 
       "url": "#" 
