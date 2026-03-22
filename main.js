@@ -181,25 +181,28 @@ async function cargarPartituraProtegida(url, key, api) {
         const response = await fetch(url);
         if (!response.ok) throw new Error("Error en conexión a bucket R2");
         
-        // 1. LEER COMO BINARIO (arrayBuffer) para no corromper el .gp
         const buffer = await response.arrayBuffer();
         const data = new Uint8Array(buffer);
 
-        // 2. DESCIFRADO (XOR directo sobre los bytes)
+        // 1. DESCIFRADO: Operación pura byte a byte
         for (let i = 0; i < data.length; i++) {
-           data[i] ^= key[i % key.length];
+            data[i] ^= key[i % key.length];
         }
 
-        // 3. VALIDACIÓN GP (Magic Bytes FICHIER o PK)
-        // Convertimos un pedazo a string solo para validar la firma
-        const header = Array.from(data.slice(0, 16)).map(b => String.fromCharCode(b)).join('');
-        const isGP = header.includes("FICHIER") || data[0] === 0x50 && data[1] === 0x4B;
+        // 2. VALIDACIÓN: Basada en tu HEX real (50 4B 03 04)
+        // GP6/7/8 son contenedores ZIP (PK..)
+        const isModernGP = data[0] === 0x50 && data[1] === 0x4B; 
+        
+        // Soporte opcional para GP3/4/5 (Busca "FICHIER" en los primeros bytes)
+        const isLegacyGP = !isModernGP && 
+            [...data.slice(0, 30)].map(b => String.fromCharCode(b)).join('').includes("FICHIER");
 
-        if (!isGP) {
-            throw new Error("Payload descifrado no es un formato Guitar Pro válido.");
+        if (!isModernGP && !isLegacyGP) {
+            console.error("Cabecera detectada:", data[0], data[1], data[2], data[3]);
+            throw new Error("El archivo descifrado no tiene una firma válida de Guitar Pro.");
         }
 
-        // 4. CARGA DIRECTA: AlphaTab recibe el Uint8Array sin necesidad de Encoder
+        // 3. CARGA: AlphaTab procesa el Uint8Array directamente
         api.load(data);
 
     } catch (e) {
