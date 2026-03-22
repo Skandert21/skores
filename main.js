@@ -181,19 +181,30 @@ async function cargarPartituraProtegida(url, key, api) {
         const response = await fetch(url);
         if (!response.ok) throw new Error("Error en conexión a bucket R2");
         
-        const textoCifrado = await response.text();
-        const xmlLimpio = decryptXOR(textoCifrado.trim(), key); 
-        const xmlTrimmed = xmlLimpio.trim();
+        // 1. LEER COMO BINARIO (arrayBuffer) para no corromper el .gp
+        const buffer = await response.arrayBuffer();
+        const data = new Uint8Array(buffer);
 
-      if (!xmlTrimmed.includes('FICHIER') && !xmlTrimmed.startsWith('PK')) {
-    throw new Error("El archivo descifrado no es un formato Guitar Pro válido.");
-}
+        // 2. DESCIFRADO (XOR directo sobre los bytes)
+        for (let i = 0; i < data.length; i++) {
+            data[i] ^= key.charCodeAt(i % key.length);
+        }
 
-        const encoder = new TextEncoder();
-        api.load(encoder.encode(xmlTrimmed));
+        // 3. VALIDACIÓN GP (Magic Bytes FICHIER o PK)
+        // Convertimos un pedazo a string solo para validar la firma
+        const header = Array.from(data.slice(0, 16)).map(b => String.fromCharCode(b)).join('');
+        const isGP = header.includes("FICHIER") || data[0] === 0x50 && data[1] === 0x4B;
+
+        if (!isGP) {
+            throw new Error("Payload descifrado no es un formato Guitar Pro válido.");
+        }
+
+        // 4. CARGA DIRECTA: AlphaTab recibe el Uint8Array sin necesidad de Encoder
+        api.load(data);
+
     } catch (e) {
         console.error("Abortado:", e.message);
-        if (loadingText) loadingText.innerText = "Error crítico de partitura.";
+        if (typeof loadingText !== 'undefined') loadingText.innerText = "Error crítico de partitura.";
     }
 }
 
