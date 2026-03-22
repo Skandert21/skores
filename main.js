@@ -176,24 +176,38 @@ async function buildKey(trackId){
  
 async function cargarPartituraProtegida(url, key, api) {
     try {
-        if(api.score) api.load(null); 
-        
+        if (api.score) api.load(null);
+
         const response = await fetch(url);
         if (!response.ok) throw new Error("Error en conexión a bucket R2");
-        
-        const textoCifrado = await response.text();
-        const xmlLimpio = decryptXOR(textoCifrado.trim(), key); 
-        const xmlTrimmed = xmlLimpio.trim();
 
-        if (!xmlTrimmed.startsWith('<?xml') && !xmlTrimmed.startsWith('<score')) {
-            throw new Error("Payload descifrado inválido.");
+        // 1. Obtener buffer binario puro
+        const bufferEncrypted = await response.arrayBuffer();
+        const data = new Uint8Array(bufferEncrypted);
+
+        // 2. Desencriptar directamente sobre los bytes
+        for (let i = 0; i < data.length; i++) {
+            data[i] ^= key.charCodeAt(i % key.length);
         }
 
-        const encoder = new TextEncoder();
-        api.load(encoder.encode(xmlTrimmed));
+        // 3. Validar Magic Bytes de Guitar Pro
+        // GP3-5: Empieza con el string "FICHIER" en el offset 1
+        // GPX/GP7: Empieza con "PK" (50 4B en hex)
+        const isGP35 = data[1] === 70 && data[2] === 73 && data[3] === 67; // "FIC"
+        const isGPX = data[0] === 80 && data[1] === 75; // "PK"
+
+        if (!isGP35 && !isGPX) {
+            throw new Error("El archivo descifrado no es un formato Guitar Pro válido.");
+        }
+
+        // 4. Cargar el buffer binario directamente
+        api.load(data);
+
     } catch (e) {
         console.error("Abortado:", e.message);
-        if (loadingText) loadingText.innerText = "Error crítico de partitura.";
+        if (typeof loadingText !== 'undefined') {
+            loadingText.innerText = "Error crítico de partitura.";
+        }
     }
 }
 
@@ -233,7 +247,7 @@ window.addEventListener('keydown', e => {
     if (trackId) {
         try {
             const keyBytes = await buildKey(trackId); 
-            const urlR2 = `https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/${encodeURIComponent(trackId)}.xml.bin`;
+            const urlR2 = `https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/${encodeURIComponent(trackId)}.gp.bin`;
             
             // Ya no hay await initSoundFont(). Directo a cargar la partitura.
             cargarPartituraProtegida(urlR2, keyBytes, at);
