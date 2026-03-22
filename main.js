@@ -51,35 +51,54 @@ at.scoreLoaded.on((score) => {
     while (trackList.firstChild) {
         trackList.removeChild(trackList.firstChild);
     }
-    
-let currentScore = null;
+
+ 
+at.scoreLoaded.on((score) => {
+    const trackList = document.getElementById('track-list');
+    if (!trackList) return;
+
+    // 1. LIMPIEZA TOTAL: Evita que se multipliquen los botones
+    trackList.innerHTML = ''; 
+
+    // 2. CREACIÓN DE BOTONES DINÁMICOS
     score.tracks.forEach((track, index) => {
-         currentScore = score;
-        const info = track.playbackInfo;
-        const trackName = (track.name || `Pista ${index + 1}`).toUpperCase();
-
-        const trackItem = document.createElement('div');
-        trackItem.style.cssText = "display: inline-flex; flex-direction: column; margin-right: 10px; border: 1px solid #444; padding: 4px; border-radius: 4px; background: #000;";
-
-        trackItem.innerHTML = `
-            <span style="font-size: 9px; color: #cc0000; font-weight: bold; margin-bottom: 2px;">${trackName}</span>
-            <select class="instrument-select" data-index="${index}" style="background: #111; color: #fff; border: 1px solid #555; font-size: 11px;">
-                <option value="29" ${info.program === 29 ? 'selected' : ''}>Distorsión</option>
-                <option value="34" ${info.program === 34 ? 'selected' : ''}>Bajo</option>
-                <option value="25" ${info.program === 25 ? 'selected' : ''}>Acústica</option>
-                <option value="0"  ${info.program === 0 ? 'selected' : ''}>Piano</option>
-                <option value="48" ${info.program === 48 ? 'selected' : ''}>Strings</option>
-            </select>
-        `;
+        const trackName = (track.name || `TRACK ${index + 1}`).toUpperCase();
         
-        // VINCULACIÓN DE EVENTO POR CÓDIGO (Más seguro que onchange en HTML)
-        const select = trackItem.querySelector('select');
-        select.addEventListener('change', (e) => {
-            window.cambiarInstrumento(index, e.target.value);
-        });
+        const btn = document.createElement('button');
+        btn.className = "btn-main"; // Reutiliza tu clase de botones rojos/negros
+        btn.style.cssText = "margin-right: 5px; font-size: 11px; min-width: 100px;";
+        btn.innerText = trackName;
 
-        trackList.appendChild(trackItem);
+        btn.onclick = () => {
+            
+            at.renderTracks([track]); 
+
+         
+            const name = trackName.toLowerCase();
+            if (name.includes("bass") || name.includes("bajo")) {
+                track.playbackInfo.program = 34;
+            } else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) {
+                track.playbackInfo.program = 29;
+            }
+
+            // C. RECONSTRUIR SINTETIZADOR
+            if (at.player && at.player.api) {
+                at.player.api.rebuildSynthesizer();
+            }
+
+            // D. FEEDBACK VISUAL: Resaltar botón seleccionado
+            document.querySelectorAll('#track-list .btn-main').forEach(b => b.style.opacity = "0.5");
+            btn.style.opacity = "1";
+            btn.style.border = "1px solid var(--accent)";
+        };
+
+        trackList.appendChild(btn);
     });
+
+    // 3. RENDER INICIAL: Mostrar la primera pista por defecto
+    if(score.tracks.length > 0) {
+        at.renderTracks([score.tracks[0]]);
+    }
 
     aplicarColoresNegros(score);
 });
@@ -275,39 +294,4 @@ window.addEventListener('keydown', e => {
     }
 })();
  
-window.cambiarInstrumento = function(index, program) {
-
-    if (!currentScore) return;
-
-    const track = currentScore.tracks[index];
-    if (!track || !track.playbackInfo) return;
-
-    const info = track.playbackInfo;
-
-    program = parseInt(program); // 🔥 importante
-
-    // --- DRUMS ---
-    if (program === 0 && track.name.toLowerCase().includes("drum")) {
-        info.channel = 9;
-        info.bank = 128;
-        info.program = 0;
-    } 
-    else {
-        // evitar canal 9
-        if (info.channel === 9 || info.channel === undefined) {
-            info.channel = index >= 9 ? index + 1 : index;
-        }
-
-        info.bank = 0;
-        info.program = program;
-    }
-
-    console.log("Cambio manual:", track.name, info);
-
  
-    const playerApi = at.player?.api || at.player;
-
-    if (playerApi?.rebuildSynthesizer) {
-        playerApi.rebuildSynthesizer();
-    }
-};
