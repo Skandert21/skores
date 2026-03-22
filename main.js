@@ -176,38 +176,24 @@ async function buildKey(trackId){
  
 async function cargarPartituraProtegida(url, key, api) {
     try {
-        if (api.score) api.load(null);
-
+        if(api.score) api.load(null); 
+        
         const response = await fetch(url);
         if (!response.ok) throw new Error("Error en conexión a bucket R2");
+        
+        const textoCifrado = await response.text();
+        const xmlLimpio = decryptXOR(textoCifrado.trim(), key); 
+        const xmlTrimmed = xmlLimpio.trim();
 
-        // 1. Obtener buffer binario puro
-        const bufferEncrypted = await response.arrayBuffer();
-        const data = new Uint8Array(bufferEncrypted);
+      if (!xmlTrimmed.includes('FICHIER') && !xmlTrimmed.startsWith('PK')) {
+    throw new Error("El archivo descifrado no es un formato Guitar Pro válido.");
+}
 
-        // 2. Desencriptar directamente sobre los bytes
-        for (let i = 0; i < data.length; i++) {
-            data[i] ^= key.charCodeAt(i % key.length);
-        }
-
-        // 3. Validar Magic Bytes de Guitar Pro
-        // GP3-5: Empieza con el string "FICHIER" en el offset 1
-        // GPX/GP7: Empieza con "PK" (50 4B en hex)
-        const isGP35 = data[1] === 70 && data[2] === 73 && data[3] === 67; // "FIC"
-        const isGPX = data[0] === 80 && data[1] === 75; // "PK"
-
-        if (!isGP35 && !isGPX) {
-            throw new Error("El archivo descifrado no es un formato Guitar Pro válido.");
-        }
-
-        // 4. Cargar el buffer binario directamente
-        api.load(data);
-
+        const encoder = new TextEncoder();
+        api.load(encoder.encode(xmlTrimmed));
     } catch (e) {
         console.error("Abortado:", e.message);
-        if (typeof loadingText !== 'undefined') {
-            loadingText.innerText = "Error crítico de partitura.";
-        }
+        if (loadingText) loadingText.innerText = "Error crítico de partitura.";
     }
 }
 
