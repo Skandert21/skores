@@ -55,36 +55,37 @@ async function cargarPartituraProtegida(url, key, api) {
 const atSettings = {
     player: {
         enablePlayer: true,
-       
         enableCursor: true,
         enableWorker: false 
     },
- display: {
-    engine: 'svg',
-    layoutMode: 'horizontal',
-    autoScroll: 1,
 
-    resources: {
-        staffLineColor: '#222',
-        barLineColor: '#444',
-        fretNumberColor: '#111',
-        standardNotationNoteHeadColor: '#111',
-        tablatureRestColor: 'transparent' 
-    }
-},  
-    notation: {
-        staveTypes: [0, 1],
-        rhythmMode: 'Hidden', 
-         extendBendArrowsOnTiedNotes: true
+    display: {
+        engine: 'svg',
+        layoutMode: 'horizontal',
+        autoScroll: 1,
+
+        resources: {
+            staffLineColor: '#222',
+            barLineColor: '#444',
+            fretNumberColor: '#111',
+            standardNotationNoteHeadColor: '#111',
+            tablatureRestColor: 'transparent'
+        },
+
         elements: {
             scoreTitle: false,
             scoreSubTitle: false,
             scoreWords: false,
-            scoreMusic: false
+            scoreMusic: true  
         }
     },
-};
 
+    notation: {
+        staveTypes: [0, 1],
+        rhythmMode: 'Hidden',
+        extendBendArrowsOnTiedNotes: true
+    }
+};
 let soundFontLoaded = false;
 
 async function initSoundFont() {
