@@ -131,53 +131,34 @@ function aplicarColoresNegros(score) {
 
 
 // --- 3. CICLO DE VIDA: CARGA DE PARTITURA ---
-  
-at.scoreLoaded.on(score => {
+let nextChannel = 0;
 
-    aplicarColoresNegros(score);
+score.tracks.forEach(track => {
+    const info = track.playbackInfo;
+    const name = (track.name || "").toLowerCase();
 
-    let nextChannel = 0;
+    info.bank = 0;
 
-    score.tracks.forEach(track => {
-
-        const info = track.playbackInfo;
-        if (!info) return;
-
-        const name = (track.name || "").toLowerCase();
-
-        // DRUMS
-        if (name.includes("drum") || name.includes("perc")) {
-            info.channel = 9;
-            info.program = 0;
-            info.bank = 128;
-            return;
-        }
-
-        // otros instrumentos
-        if (nextChannel === 9) nextChannel++;
-
-        info.channel = nextChannel++;
-        info.bank = 0;
-
-        if (name.includes("bass")) {
-            info.program = 34;
-        } else if (name.includes("guitar")) {
-            info.program = 29;
-        } else {
-            info.program = 0;
-        }
-
-    });
-
-    // 🔥 IMPORTANTE: fuera del loop
-    at.render();
-
-    const playerApi = at.player?.api || at.player;
-    if (playerApi?.rebuildSynthesizer) {
-        playerApi.rebuildSynthesizer();
+    if (name.includes("drum")) {
+        info.program = 0;
+        info.channel = 9;
+        return;
     }
 
+    // saltar canal 9 (batería)
+    if (nextChannel === 9) nextChannel++;
+
+    info.channel = nextChannel++;
+
+    if (name.includes("bass")) {
+        info.program = 34;
+    } else if (name.includes("guitar")) {
+        info.program = 29;
+    } else {
+        info.program = 0;
+    }
 });
+
   
 at.render();
  
