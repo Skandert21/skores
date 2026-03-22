@@ -62,8 +62,7 @@ const atSettings = {
     display: {
         engine: 'canvas',
         layoutMode: 'page',
-       scale: 3, 
-        upscale: 2,
+     
         resources: {
             // NEGRO ABSOLUTO Y ALTO CONTRASTE
             staffLineColor: '#000000',
