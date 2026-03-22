@@ -255,3 +255,23 @@ body {
     letter-spacing: 1px;
 }
 
+#alphaTab {
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+
+/* Forzar que el canvas ocupe el ancho y se vea nítido */
+.at-canvas {
+    width: 100% !important;
+    height: auto !important;
+    image-rendering: auto; 
+}
+
+/* Ocultar elementos de impresión si aparecen */
+.at-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    padding: 20px !important;
+}

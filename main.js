@@ -28,7 +28,13 @@ function decryptXOR(input, keyBytes) { // ahora keyBytes es Uint8Array
 }
 
 async function cargarPartituraProtegida(url, key, api) {
+
+       
     try {
+         // Limpiamos la memoria de la partitura anterior antes de cargar la nueva
+        if(api.score) {
+            api.load(null); 
+        }
         console.log("Iniciando descarga protegida...");
         const response = await fetch(url);
         if (!response.ok) throw new Error("No se pudo obtener el archivo de R2");
@@ -58,160 +64,90 @@ async function cargarPartituraProtegida(url, key, api) {
 }
 
 // --- 2. CONFIGURACIÓN DE ALPHATAB ---
-
-const at = new alphaTab.AlphaTabApi(el, {
-
-
+// --- CONFIGURACIÓN TIPO SONGSTERR ---
+const atSettings = {
     player: {
         enablePlayer: true,
-        enableCursor: true, 
-        enableUserInteraction: true
-    },
-    ui: {
-        cursorColor: "#e63946" 
+        soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2',
+        enableCursor: true
     },
     display: {
-        engine: 'svg',
-       layoutMode: 'page',
-        autoScroll: 1,
-        // No usamos staveProfile para que no sobreescriba nuestros ajustes
-        elements: {
-            scoreTitle: true,
-            scoreSubTitle: false,
+        engine: 'canvas',
+        layoutMode: 'page',
+        staveProfile: 'Score', // Layout más compacto
+        upscale: 2, // Mejora nitidez en pantallas Retina/4K
+        resources: {
+            staffLineColor: '#222222',
+            barLineColor: '#222222',
+            fretNumberColor: '#000000',
+            fretNumberFont: 'bold 12px "Roboto", "Arial"',
+            standardNotationNoteHeadColor: '#000000'
         }
     },
     notation: {
-        // 1. Forzamos Pentagrama y Tablatura
-        staveTypes: [0, 1], 
-        
-        // 2. Quitamos los silencios negros de la TAB (se verán en el pentagrama)
-        rhythmMode: 'Hidden', 
-        
-        // 3. LA SOLUCIÓN AL GRIS: Forzamos opacidad total en voces inactivas
-        inactiveVoiceAlpha: 1.0, 
-        
-        // 4. Forzamos a que todas las voces sean negras
-        voiceColor: '#000000',
-
-        // 5. Intentamos colapsar voces para evitar que se peleen
-        enableAllVoices: true,
-        minimizeAllVoices: true,
-        extendBendArrowsOnTiedNotes: false,
-       
+        staveTypes: [0, 1],
+        rhythmMode: 'Hidden',
+        voiceColor: '#000000'
     }
-});
- 
-const progress = new Map();
+};
 
-function updateLoadingIndicator() {
-    let loaded = 0;
-    let total = 0;
-    progress.forEach(value => {
-        loaded += value.loaded;
-        total += value.total;
+const at = new alphaTab.AlphaTabApi(el, atSettings);
+
+// --- GESTIÓN DE INSTRUMENTOS (V3) ---
+at.scoreLoaded.on(score => {
+    score.tracks.forEach(track => {
+        const info = track.playbackInfo;
+        const name = (track.name || "").toLowerCase();
+        
+        info.bank = 0;
+        // Mapeo forzado por palabras clave
+        if (name.includes("drum") || name.includes("perc")) {
+            info.program = 0; 
+            info.channel = 9; // El canal 9 es sagrado para percusión
+        } else if (name.includes("bass")) {
+            info.program = 34;
+        } else if (name.includes("guitar")) {
+            // 29: Overdrive, 27: Clean, 24: Acoustic
+            info.program = name.includes("dist") ? 29 : 27; 
+        }
+
+        // Si el archivo viene mal mapeado y todo es 0 (piano), forzamos guitarra eléctrica
+        if(info.program === 0 && info.channel !== 9) {
+            info.program = 27; 
+        }
     });
 
-    const percent = Math.floor((loaded / total) * 100);
-    const progressVal = isNaN(percent) ? 0 : percent;
-
-    if (loadingText) {
-        loadingText.innerText = `Sincronizando instrumentos... ${progressVal}%`;
+    // Sincronización inmediata del motor de audio
+    if(at.player) {
+        at.player.rebuildSynthesizer();
     }
 
-    if(total === loaded && total > 0) {
-        console.log('--- Instrumentos listos ---');
-        if (loaderContainer) loaderContainer.style.display = 'none'; 
+    // Generar UI de pistas
+    const trackList = document.getElementById('track-list');
+    if (trackList) {
+        trackList.innerHTML = '';
+        score.tracks.forEach((track) => {
+            const btn = document.createElement('button');
+            btn.className = 'btn-inst';
+            btn.innerText = track.name || `Track ${track.index + 1}`;
+            btn.onclick = () => {
+                at.renderTracks([track]);
+                document.querySelectorAll('.btn-inst').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            };
+            trackList.appendChild(btn);
+        });
+    }
+});
+// 3. GESTIÓN DE CARGA (Sustituye a tu updateLoadingIndicator manual)
+at.playerReady.on(() => {
+    console.log("Sintetizador y SoundFont listos.");
+    if (loaderContainer) loaderContainer.style.display = 'none';
+    if (playPause) {
         playPause.style.opacity = "1";
         playPause.innerText = "▶ PLAY";
     }
-}
-
-function loadSoundFont(url) {
-    if(progress.has(url)) return; 
-    progress.set(url, { loaded: 0, total: 1024 * 1024 }); 
-    const request = new XMLHttpRequest();
-    request.open('GET', url, true);
-    request.responseType = 'arraybuffer';
-    request.onload = () => {
-        if (request.status === 200) {
-            const buffer = new Uint8Array(request.response);
-            at.loadSoundFont(buffer);
-        }
-    };
-    request.onprogress = e => {
-        if (e.lengthComputable) {
-            progress.set(url, { loaded: e.loaded, total: e.total });
-            updateLoadingIndicator();
-        }
-    };
-    request.send();
-}
-
-// --- 4. EVENTOS DE ALPHATAB ---
-
-at.scoreLoaded.on(score => {
-
-    aplicarColoresNegros(score);
-
-    // Detectar instrumentos automáticamente
-    autoMapInstruments(score);
-
-    // DEBUG para verificar instrumentos
-    score.tracks.forEach(track => {
-        const info = track.playbackInfo;
-        console.log(
-            "Track:", track.name,
-            "Program:", info?.program,
-            "Bank:", info?.bank,
-            "Channel:", info?.channel
-        );
-    });
-
-    // Cargar SoundFont después del mapeo
-    loadSoundFont(
-        'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2'
-    );
-
-    // Renderizar partitura
-    at.render();
-
-    // Reconstruir sintetizador
-    if (at.player) {
-        at.player.rebuild();
-    }
-
-    // Crear lista de pistas
-    const trackList = document.getElementById('track-list');
-    trackList.innerHTML = '';
-
-    score.tracks.forEach((track) => {
-
-        const btn = document.createElement('button');
-        btn.className = 'btn-inst';
-        btn.innerText = track.name || `Pista ${track.index + 1}`;
-
-        btn.onclick = () => {
-
-            at.renderTracks([track]);
-
-            document
-                .querySelectorAll('.btn-inst')
-                .forEach(b => b.classList.remove('active'));
-
-            btn.classList.add('active');
-
-        };
-
-        trackList.appendChild(btn);
-
-    });
-
 });
-
-at.playerStateChanged.on((args) => {
-    playPause.innerText = args.state === 1 ? "⏸ PAUSE" : "▶ PLAY";
-});
-
 // --- 5. CONTROLES DE INTERFAZ ---
 
 playPause.onclick = async e => {
@@ -303,76 +239,5 @@ async function buildKey(trackId){
 })();
 
  
-function aplicarColoresNegros(score) {
-    const black = alphaTab.model.Color.fromJson("#000000");
-    const transparent = alphaTab.model.Color.fromJson("#00000000");
-
-    score.tracks.forEach(track => {
-        track.staves.forEach(staff => {
-            staff.bars.forEach(bar => {
-                bar.voices.forEach(voice => {
-                    voice.beats.forEach(beat => {
-                        beat.style = beat.style || new alphaTab.model.BeatStyle();
-                        // Silencios transparentes en TAB
-                        beat.style.colors.set(alphaTab.model.BeatSubElement.GuitarTabRests, transparent);
-                        beat.notes.forEach(note => {
-                            note.style = note.style || new alphaTab.model.NoteStyle();
-                            // Números y cabezas de nota negros
-                            note.style.colors.set(alphaTab.model.NoteSubElement.GuitarTabFretNumber, black);
-                            note.style.colors.set(alphaTab.model.NoteSubElement.StandardNotationNoteHead, black);
-                        });
-                    });
-                });
-            });
-        });
-    });
-}
-
-function autoMapInstruments(score){
-
-    let nextChannel = 0; // GM channels 0-15, 9 es batería
-
-    score.tracks.forEach(track => {
-        if(!track.playbackInfo) return;
-
-        const info = track.playbackInfo;
-        info.bank = 0;
-
-        const name = (track.name || "").toLowerCase();
-
-        // 1️⃣ Asignar programa (instrumento) si es 0
-        if(info.program === 0){
-            if(name.includes("drum") || name.includes("perc")){
-                info.program = 0;
-            } else if(name.includes("bass")){
-                info.program = 34;
-            } else if(name.includes("guitar")){
-                info.program = 30;
-            } else if(name.includes("acoustic")){
-                info.program = 24;
-            } else if(name.includes("piano") || name.includes("keys")){
-                info.program = 0;
-            } else if(name.includes("violin") || name.includes("strings")){
-                info.program = 40;
-            }
-        }
-
-        // 2️⃣ Asignar canal si no existe
-        if(info.channel === undefined){
-            if(info.program === 0 && (name.includes("drum") || name.includes("perc"))){
-                info.channel = 9; // canal GM de batería
-            } else {
-                if(nextChannel === 9) nextChannel++; // saltar canal de batería
-                info.channel = nextChannel++;
-            }
-        }
-
-        // DEBUG
-        console.log(
-            "Track:", track.name,
-            "Program:", info.program,
-            "Bank:", info.bank,
-            "Channel:", info.channel
-        );
-    });
-}
+ 
+ 
