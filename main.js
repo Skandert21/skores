@@ -51,8 +51,10 @@ at.scoreLoaded.on((score) => {
     while (trackList.firstChild) {
         trackList.removeChild(trackList.firstChild);
     }
-
+    
+let currentScore = null;
     score.tracks.forEach((track, index) => {
+         currentScore = score;
         const info = track.playbackInfo;
         const trackName = (track.name || `Pista ${index + 1}`).toUpperCase();
 
@@ -274,11 +276,38 @@ window.addEventListener('keydown', e => {
 })();
  
 window.cambiarInstrumento = function(index, program) {
-    console.log(`Cambiando track ${index} a programa ${program}`);
-    if (at && at.score && at.score.tracks[index]) {
-        at.score.tracks[index].playbackInfo.program = parseInt(program);
-        if (at.player && at.player.api) {
-            at.player.api.rebuildSynthesizer();
+
+    if (!currentScore) return;
+
+    const track = currentScore.tracks[index];
+    if (!track || !track.playbackInfo) return;
+
+    const info = track.playbackInfo;
+
+    program = parseInt(program); // 🔥 importante
+
+    // --- DRUMS ---
+    if (program === 0 && track.name.toLowerCase().includes("drum")) {
+        info.channel = 9;
+        info.bank = 128;
+        info.program = 0;
+    } 
+    else {
+        // evitar canal 9
+        if (info.channel === 9 || info.channel === undefined) {
+            info.channel = index >= 9 ? index + 1 : index;
         }
+
+        info.bank = 0;
+        info.program = program;
+    }
+
+    console.log("Cambio manual:", track.name, info);
+
+ 
+    const playerApi = at.player?.api || at.player;
+
+    if (playerApi?.rebuildSynthesizer) {
+        playerApi.rebuildSynthesizer();
     }
 };
