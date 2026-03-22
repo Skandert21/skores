@@ -43,49 +43,56 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
 // --- 2. REGISTRO DE EVENTOS (LISTENERS) ---
 // Obligatorio: Declarar antes de cualquier función de carga (api.load)
 
- at.scoreLoaded.on((score) => {
-    console.log("Score GP cargado. Re-mapeando instrumentos...");
-    let nextChannel = 0;
+at.scoreLoaded.on((score) => {
+    const trackList = document.getElementById('track-list');
+    if (!trackList) return;
 
-    score.tracks.forEach(track => {
+    trackList.innerHTML = ''; // Limpiar tracks anteriores
+
+    score.tracks.forEach((track, index) => {
         const info = track.playbackInfo;
-        const name = (track.name || "").toLowerCase();
+        const trackName = track.name || `Pista ${index + 1}`;
 
-        // 1. Forzar Banco 0 para compatibilidad con GeneralUser-GS.sf2
-        info.bank = 0;
+        // Crear el control individual
+        const trackItem = document.createElement('div');
+        trackItem.className = "track-control-item"; // Usa esta clase para tu CSS
+        trackItem.style.cssText = "display: flex; flex-direction: column; min-width: 120px; padding: 5px; background: #1a1a1a; border: 1px solid #333; border-radius: 4px;";
 
-        // 2. Gestión de Canales MIDI (Evitar el 9 que es percusión)
-        if (name.includes("drum") || name.includes("percussion") || track.isPercussion) {
-            info.program = 0;
-            info.channel = 9; 
-            return;
-        }
-
-        if (nextChannel === 9) nextChannel++;
-        info.channel = nextChannel++;
-
-        // 3. Mapeo Manual (Prioridad sobre lo que traiga el GP)
-        if (name.includes("bass") || name.includes("bajo")) {
-            info.program = 34; // Picked Bass
-        } else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) {
-            info.program = 29; // Overdriven Guitar
-        } else {
-            // Si no reconoce el nombre, mantenemos lo que traiga el GP 
-            // en lugar de forzar piano (0), para no romper teclados o vientos.
-            if(info.program <= 0) info.program = 25; // Guitarra acústica como fallback seguro
-        }
-        
-        console.log(`Track: ${track.name} -> Canal: ${info.channel}, Program: ${info.program}`);
+        trackItem.innerHTML = `
+            <span style="font-size: 10px; color: #880000; font-weight: bold; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${trackName}
+            </span>
+            <select onchange="cambiarInstrumento(${index}, this.value)" 
+                    style="background: #000; color: #fff; border: 1px solid #444; font-size: 11px; padding: 2px; cursor: pointer;">
+                <option value="29" ${info.program === 29 ? 'selected' : ''}>Guitarra Dist</option>
+                <option value="34" ${info.program === 34 ? 'selected' : ''}>Bajo Pick</option>
+                <option value="25" ${info.program === 25 ? 'selected' : ''}>Acústica</option>
+                <option value="0"  ${info.program === 0 ? 'selected' : ''}>Piano</option>
+                <option value="48" ${info.program === 48 ? 'selected' : ''}>Strings</option>
+                <option value="114">Drums (Steel)</option>
+            </select>
+        `;
+        trackList.appendChild(trackItem);
     });
 
-    // IMPORTANTE: Notificar al player que el modelo cambió
-    if (at.player && at.player.api) {
-        at.player.api.rebuildSynthesizer(); 
-    }
-    
-    // Mantener tus estilos visuales
     aplicarColoresNegros(score);
+    
+    if (at.player && at.player.api) {
+        at.player.api.rebuildSynthesizer();
+    }
 });
+
+// FUNCIÓN GLOBAL (Asegúrate de tenerla fuera de cualquier bloque)
+function cambiarInstrumento(trackIndex, newProgram) {
+    if(!at.score) return;
+    const track = at.score.tracks[trackIndex];
+    track.playbackInfo.program = parseInt(newProgram);
+    
+    if (at.player && at.player.api) {
+        at.player.api.rebuildSynthesizer();
+        console.log(`Track ${trackIndex} actualizado a programa ${newProgram}`);
+    }
+}
 
 at.playerReady.on(() => {
     console.log("Audio listo. Verificando estado del sintetizador...");
