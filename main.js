@@ -64,64 +64,73 @@ async function cargarPartituraProtegida(url, key, api) {
 }
 
 // --- 2. CONFIGURACIÓN DE ALPHATAB ---
-// --- CONFIGURACIÓN REPARADA ---
 const atSettings = {
     player: {
         enablePlayer: true,
-        soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2',
+        soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.getr2.dev/fonts/GeneralUser-GS.sf2',
         enableCursor: true,
         enableWorker: false 
     },
     display: {
         engine: 'canvas',
         layoutMode: 'page',
-        staveProfile: 'Default', 
+        // 'Score' es más limpio para web, pero 'Default' es necesario si quieres ver ambos.
+        // Ajustamos la escala para que no se vea "pequeño".
+        scale: 1, 
         upscale: 2,
         resources: {
+            // FORZAMOS COLORES DESDE EL MOTOR
             staffLineColor: '#222222',
             barLineColor: '#222222',
             fretNumberColor: '#000000',
-            fretNumberFont: 'bold 13px "Arial"',
-            standardNotationNoteHeadColor: '#000000'
+            fretNumberFont: 'bold 14px "Arial"',
+            tablatureFont: '10px "Arial"',
+            standardNotationNoteHeadColor: '#000000',
+            // Ocultamos los silencios grises de fondo
+            tablatureRestColor: 'transparent' 
         }
     },
     notation: {
-        // 0 = Standard (Pentagrama), 1 = Tablature (Tablatura)
-        // Usamos enteros para evitar el error de "undefined"
-        staveTypes: [0, 1], 
-        rhythmMode: 'ShowWithSymbols', 
-        voiceColor: '#000000'
+        staveTypes: [0, 1],
+        // 'Hidden' en rhythmMode quita los silencios y plicas de la TAB, dejándola limpia como Songsterr.
+        rhythmMode: 'Hidden', 
+        elements: {
+            // Desactivamos elementos que ensucian la vista web
+            scoreTitle: false,
+            scoreSubTitle: false,
+            scoreWords: false,
+            scoreMusic: false
+        }
     }
 };
 
 const at = new alphaTab.AlphaTabApi(el, atSettings);
 
-// --- CORRECCIÓN DE AUDIO Y RENDER ---
 at.scoreLoaded.on(score => {
     score.tracks.forEach(track => {
         const info = track.playbackInfo;
         const name = (track.name || "").toLowerCase();
         
         info.bank = 0;
-        // Mapeo forzado: Priorizamos lo que el usuario espera oír
         if (name.includes("drum") || name.includes("perc")) {
             info.program = 0;
             info.channel = 9;
-        } else if (name.includes("bass")) {
-            info.program = 34;
         } else {
-            // Forzamos 27 (Guitarra Clean en GeneralUser-GS)
+            // Forzamos Guitarra Clean (27)
             info.program = 27; 
         }
     });
 
-    // Forzar renderizado de la primera pista para asegurar que la TAB sea visible
-    if(score.tracks.length > 0) {
-        at.renderTracks([score.tracks[0]]);
-    }
+    // RE-RENDER PARA APLICAR LIMPIEZA
+    at.renderTracks([score.tracks[0]]);
 
-    if(at.player) {
-        at.player.rebuildSynthesizer();
+    // REPARACIÓN DEL AUDIO (Evita el error de .rebuildSynthesizer)
+    if (at.player) {
+        // En 1.8.1, si rebuildSynthesizer falla, usamos la propiedad de carga
+        const playerApi = at.player.api || at.player;
+        if (typeof playerApi.rebuildSynthesizer === 'function') {
+            playerApi.rebuildSynthesizer();
+        }
     }
 });
 
