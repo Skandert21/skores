@@ -47,39 +47,39 @@ at.scoreLoaded.on((score) => {
     const trackList = document.getElementById('track-list');
     if (!trackList) return;
 
-    trackList.innerHTML = ''; // Limpiar tracks anteriores
+    // LIMPIEZA AGRESIVA: Asegura que no queden restos de renders anteriores
+    while (trackList.firstChild) {
+        trackList.removeChild(trackList.firstChild);
+    }
 
     score.tracks.forEach((track, index) => {
         const info = track.playbackInfo;
-        const trackName = track.name || `Pista ${index + 1}`;
+        const trackName = (track.name || `Pista ${index + 1}`).toUpperCase();
 
-        // Crear el control individual
         const trackItem = document.createElement('div');
-        trackItem.className = "track-control-item"; // Usa esta clase para tu CSS
-        trackItem.style.cssText = "display: flex; flex-direction: column; min-width: 120px; padding: 5px; background: #1a1a1a; border: 1px solid #333; border-radius: 4px;";
+        trackItem.style.cssText = "display: inline-flex; flex-direction: column; margin-right: 10px; border: 1px solid #444; padding: 4px; border-radius: 4px; background: #000;";
 
         trackItem.innerHTML = `
-            <span style="font-size: 10px; color: #880000; font-weight: bold; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${trackName}
-            </span>
-            <select onchange="cambiarInstrumento(${index}, this.value)" 
-                    style="background: #000; color: #fff; border: 1px solid #444; font-size: 11px; padding: 2px; cursor: pointer;">
-                <option value="29" ${info.program === 29 ? 'selected' : ''}>Guitarra Dist</option>
-                <option value="34" ${info.program === 34 ? 'selected' : ''}>Bajo Pick</option>
+            <span style="font-size: 9px; color: #cc0000; font-weight: bold; margin-bottom: 2px;">${trackName}</span>
+            <select class="instrument-select" data-index="${index}" style="background: #111; color: #fff; border: 1px solid #555; font-size: 11px;">
+                <option value="29" ${info.program === 29 ? 'selected' : ''}>Distorsión</option>
+                <option value="34" ${info.program === 34 ? 'selected' : ''}>Bajo</option>
                 <option value="25" ${info.program === 25 ? 'selected' : ''}>Acústica</option>
                 <option value="0"  ${info.program === 0 ? 'selected' : ''}>Piano</option>
                 <option value="48" ${info.program === 48 ? 'selected' : ''}>Strings</option>
-                <option value="114">Drums (Steel)</option>
             </select>
         `;
+        
+        // VINCULACIÓN DE EVENTO POR CÓDIGO (Más seguro que onchange en HTML)
+        const select = trackItem.querySelector('select');
+        select.addEventListener('change', (e) => {
+            window.cambiarInstrumento(index, e.target.value);
+        });
+
         trackList.appendChild(trackItem);
     });
 
     aplicarColoresNegros(score);
-    
-    if (at.player && at.player.api) {
-        at.player.api.rebuildSynthesizer();
-    }
 });
 
 // FUNCIÓN GLOBAL (Asegúrate de tenerla fuera de cualquier bloque)
@@ -272,3 +272,13 @@ window.addEventListener('keydown', e => {
         }
     }
 })();
+ 
+window.cambiarInstrumento = function(index, program) {
+    console.log(`Cambiando track ${index} a programa ${program}`);
+    if (at && at.score && at.score.tracks[index]) {
+        at.score.tracks[index].playbackInfo.program = parseInt(program);
+        if (at.player && at.player.api) {
+            at.player.api.rebuildSynthesizer();
+        }
+    }
+};
