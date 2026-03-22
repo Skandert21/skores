@@ -3,9 +3,8 @@ const playPause = document.querySelector('#play-pause-btn');
 const loaderContainer = document.getElementById('loader-container'); 
 const loadingText = document.getElementById('loading-text');
 
-// --- 1. LÓGICA DE DESCIFRADO Y CARGA ---
-
-function decryptXOR(input, keyBytes) { // ahora keyBytes es Uint8Array
+// --- 1. LÓGICA DE DESCIFRADO ---
+function decryptXOR(input, keyBytes) {
     const binary = atob(input);
     const bytes = new Uint8Array(binary.length);
 
@@ -28,20 +27,14 @@ function decryptXOR(input, keyBytes) { // ahora keyBytes es Uint8Array
 }
 
 async function cargarPartituraProtegida(url, key, api) {
-
-       
     try {
-         // Limpiamos la memoria de la partitura anterior antes de cargar la nueva
-        if(api.score) {
-            api.load(null); 
-        }
+        if(api.score) api.load(null); 
         console.log("Iniciando descarga protegida...");
+        
         const response = await fetch(url);
         if (!response.ok) throw new Error("No se pudo obtener el archivo de R2");
         
         const textoCifrado = await response.text();
-        
-        // Desciframos
         const xmlLimpio = decryptXOR(textoCifrado.trim(), key); 
         const xmlTrimmed = xmlLimpio.trim();
 
@@ -50,12 +43,7 @@ async function cargarPartituraProtegida(url, key, api) {
         }
 
         const encoder = new TextEncoder();
-        const dataBytes = encoder.encode(xmlTrimmed);
-
-        console.log("¡Descifrado exitoso! Renderizando...");
-        
-        // Cargamos los bytes en AlphaTab
-        api.load(dataBytes);
+        api.load(encoder.encode(xmlTrimmed));
 
     } catch (e) {
         console.error("Fallo en la carga:", e.message);
@@ -63,39 +51,34 @@ async function cargarPartituraProtegida(url, key, api) {
     }
 }
 
-// --- 2. CONFIGURACIÓN DE ALPHATAB ---
+// --- 2. CONFIGURACIÓN DE MOTOR (VISUAL Y AUDIO) ---
 const atSettings = {
     player: {
         enablePlayer: true,
-        soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.getr2.dev/fonts/GeneralUser-GS.sf2',
+        soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2', // URL estable
         enableCursor: true,
         enableWorker: false 
     },
     display: {
         engine: 'canvas',
         layoutMode: 'page',
-        // 'Score' es más limpio para web, pero 'Default' es necesario si quieres ver ambos.
-        // Ajustamos la escala para que no se vea "pequeño".
         scale: 1, 
         upscale: 2,
         resources: {
-            // FORZAMOS COLORES DESDE EL MOTOR
-            staffLineColor: '#222222',
-            barLineColor: '#222222',
+            // NEGRO ABSOLUTO Y ALTO CONTRASTE
+            staffLineColor: '#000000',
+            barLineColor: '#000000',
             fretNumberColor: '#000000',
-            fretNumberFont: 'bold 14px "Arial"',
-            tablatureFont: '10px "Arial"',
+            fretNumberFont: '800 15px "Arial", sans-serif', // '800' evita que el upscale lo ponga gris
+            tablatureFont: 'bold 11px "Arial"',
             standardNotationNoteHeadColor: '#000000',
-            // Ocultamos los silencios grises de fondo
             tablatureRestColor: 'transparent' 
         }
     },
     notation: {
         staveTypes: [0, 1],
-        // 'Hidden' en rhythmMode quita los silencios y plicas de la TAB, dejándola limpia como Songsterr.
-        rhythmMode: 'Hidden', 
+        rhythmMode: 'Hidden', // Limpieza de silencios
         elements: {
-            // Desactivamos elementos que ensucian la vista web
             scoreTitle: false,
             scoreSubTitle: false,
             scoreWords: false,
@@ -106,7 +89,9 @@ const atSettings = {
 
 const at = new alphaTab.AlphaTabApi(el, atSettings);
 
+// --- 3. CICLO DE VIDA: CARGA DE PARTITURA ---
 at.scoreLoaded.on(score => {
+    // 1. Forzar Programas MIDI (Quitar Piano)
     score.tracks.forEach(track => {
         const info = track.playbackInfo;
         const name = (track.name || "").toLowerCase();
@@ -116,75 +101,66 @@ at.scoreLoaded.on(score => {
             info.program = 0;
             info.channel = 9;
         } else {
-            // Forzamos Guitarra Clean (27)
-            info.program = 27; 
+            info.program = 27; // Guitarra Clean
         }
     });
 
-    // RE-RENDER PARA APLICAR LIMPIEZA
+    // 2. Renderizar visual para aplicar los colores negros
     at.renderTracks([score.tracks[0]]);
 
-    // REPARACIÓN DEL AUDIO (Evita el error de .rebuildSynthesizer)
-    if (at.player) {
-        // En 1.8.1, si rebuildSynthesizer falla, usamos la propiedad de carga
-        const playerApi = at.player.api || at.player;
-        if (typeof playerApi.rebuildSynthesizer === 'function') {
-            playerApi.rebuildSynthesizer();
-        }
+    // 3. Reconstruir Sintetizador (Bypass seguro de interfaz)
+    const playerApi = at.player?.api || at.player;
+    if (playerApi && typeof playerApi.rebuildSynthesizer === 'function') {
+        try { playerApi.rebuildSynthesizer(); } catch(e) { console.warn("Rebuild falló en scoreLoaded"); }
     }
 });
 
-// ESTO SOLUCIONA EL PIANO: Refrescar el motor cuando el audio esté listo
+// --- 4. CICLO DE VIDA: REPRODUCTOR LISTO ---
 at.playerReady.on(() => {
     console.log("Audio listo, aplicando parches finales...");
-    at.player.rebuildSynthesizer(); 
-    if (loaderContainer) loaderContainer.style.display = 'none';
-});
-// 3. GESTIÓN DE CARGA (Sustituye a tu updateLoadingIndicator manual)
-at.playerReady.on(() => {
-    console.log("Sintetizador y SoundFont listos.");
+    
+    // Si el primer rebuild falló, lo forzamos al estar listos
+    const playerApi = at.player?.api || at.player;
+    if (playerApi && typeof playerApi.rebuildSynthesizer === 'function') {
+        try { playerApi.rebuildSynthesizer(); } catch(e) {}
+    }
+
     if (loaderContainer) loaderContainer.style.display = 'none';
     if (playPause) {
         playPause.style.opacity = "1";
         playPause.innerText = "▶ PLAY";
     }
 });
-// --- 5. CONTROLES DE INTERFAZ ---
 
+// Evento para cambiar el texto del botón dinámicamente
+at.playerStateChanged.on(e => {
+    if (playPause) {
+        // e.state: 0 = Stopped, 1 = Playing, 2 = Paused
+        playPause.innerText = (e.state === 1) ? "⏸ PAUSE" : "▶ PLAY";
+    }
+});
+
+// --- 5. CONTROLES DE INTERFAZ Y AUDIO CONTEXT ---
 playPause.onclick = async e => {
     e.preventDefault();
-
+    // Desbloqueo del AudioContext exigido por los navegadores
     if (at.player?.api?.audioContext?.state === 'suspended') {
         await at.player.api.audioContext.resume();
     }
-
     at.playPause();
 };
 
 document.getElementById('stop-btn').onclick = () => {
-    if (at.player) {
-        at.stop(); 
-        playPause.innerText = "▶ PLAY";
-    }
+    if (at.player) at.stop(); 
 };
 
 const lockBtnFooter = document.getElementById('lock-scroll-footer');
-
-
-const iconLocked = '🔒\uFE0E';
-const iconUnlocked = '🔓\uFE0E';
 let isScrollLocked = false;
- 
-
 lockBtnFooter.onclick = () => {
-
     isScrollLocked = !isScrollLocked;
-
     at.settings.display.autoScroll = isScrollLocked ? 0 : 1;
-
     at.updateSettings();
-
-    lockBtnFooter.innerText = isScrollLocked ? iconLocked : iconUnlocked;
+    lockBtnFooter.innerText = isScrollLocked ? '🔒\uFE0E' : '🔓\uFE0E';
 };
 
 window.addEventListener('keydown', e => {
@@ -194,51 +170,29 @@ window.addEventListener('keydown', e => {
     }
 });
 
-const urlParams = new URLSearchParams(window.location.search);
-const trackId = urlParams.get('track');
-
- 
+// --- 6. INICIALIZACIÓN DE DATOS ---
 async function buildKey(trackId){
-
-    const response = await fetch(
-        `https://skores-back.onrender.com/api/request-key/${encodeURIComponent(trackId)}`
-    );
-
-    if(!response.ok){
-        throw new Error("No se pudo obtener la key del servidor");
-    }
-
+    const response = await fetch(`https://skores-back.onrender.com/api/request-key/${encodeURIComponent(trackId)}`);
+    if(!response.ok) throw new Error("No se pudo obtener la key del servidor");
+    
     const data = await response.json();
-
     const binary = atob(data.k);
     const key = new Uint8Array(binary.length);
-
-    for(let i=0;i<binary.length;i++){
-        key[i] = binary.charCodeAt(i);
-    }
-
+    for(let i=0;i<binary.length;i++) key[i] = binary.charCodeAt(i);
+    
     return key;
 }
-    
- 
+
 (async () => {
+    const trackId = new URLSearchParams(window.location.search).get('track');
     if (trackId) {
         try {
-            // 1. Definimos la URL de tu archivo en R2 (Sigue igual)
             const urlR2 = `https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/${encodeURIComponent(trackId)}.xml.bin`;
- 
             const keyBytes = await buildKey(trackId); 
-            
-            // 3. Ejecutamos la carga con la llave que nos dio el servidor
             cargarPartituraProtegida(urlR2, keyBytes, at);
-            
         } catch (error) {
             console.error("Error en el flujo de inicio:", error);
             if (loadingText) loadingText.innerText = "Error de autenticación con el servidor.";
         }
     }
 })();
-
- 
- 
- 
