@@ -43,66 +43,57 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
 // --- 2. REGISTRO DE EVENTOS (LISTENERS) ---
 // Obligatorio: Declarar antes de cualquier función de carga (api.load)
 
-at.scoreLoaded.on((score) => {
-    const trackList = document.getElementById('track-list');
-    if (!trackList) return;
-
-    // LIMPIEZA AGRESIVA: Asegura que no queden restos de renders anteriores
-    while (trackList.firstChild) {
-        trackList.removeChild(trackList.firstChild);
-    }
-
  
-at.scoreLoaded.on((score) => {
+ at.scoreLoaded.on((score) => {
     const trackList = document.getElementById('track-list');
     if (!trackList) return;
 
-    // 1. LIMPIEZA TOTAL: Evita que se multipliquen los botones
-    trackList.innerHTML = ''; 
+    trackList.innerHTML = ''; // Limpieza total de renderizados previos
 
-    // 2. CREACIÓN DE BOTONES DINÁMICOS
     score.tracks.forEach((track, index) => {
-        const trackName = (track.name || `TRACK ${index + 1}`).toUpperCase();
+        const trackName = (track.name || `Pista ${index + 1}`).toUpperCase();
         
+        // Crear el botón de instrumento
         const btn = document.createElement('button');
-        btn.className = "btn-main"; // Reutiliza tu clase de botones rojos/negros
-        btn.style.cssText = "margin-right: 5px; font-size: 11px; min-width: 100px;";
+        btn.className = "btn-instrument"; // Define estilos en tu CSS
         btn.innerText = trackName;
+        btn.style.cssText = "margin-right: 8px; padding: 8px 12px; background: #222; color: #cc0000; border: 1px solid #444; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s;";
+
+        // Efecto Hover / Active
+        btn.onmouseover = () => btn.style.borderColor = "#cc0000";
+        btn.onmouseout = () => btn.style.borderColor = "#444";
 
         btn.onclick = () => {
-            
+            // 1. CAMBIO DE VISTA: Renderizar solo esta pista
             at.renderTracks([track]); 
 
-         
+            // 2. CAMBIO DE AUDIO: Asignar programa según el nombre (Lógica Senior)
             const name = trackName.toLowerCase();
-            if (name.includes("bass") || name.includes("bajo")) {
-                track.playbackInfo.program = 34;
-            } else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) {
-                track.playbackInfo.program = 29;
-            }
+            if (name.includes("bass") || name.includes("bajo")) track.playbackInfo.program = 34;
+            else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) track.playbackInfo.program = 29;
+            else track.playbackInfo.program = 25;
 
-            // C. RECONSTRUIR SINTETIZADOR
             if (at.player && at.player.api) {
                 at.player.api.rebuildSynthesizer();
             }
 
-            // D. FEEDBACK VISUAL: Resaltar botón seleccionado
-            document.querySelectorAll('#track-list .btn-main').forEach(b => b.style.opacity = "0.5");
-            btn.style.opacity = "1";
-            btn.style.border = "1px solid var(--accent)";
+            // 3. UI Feedback: Resaltar botón activo
+            document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#222");
+            btn.style.background = "#440000";
         };
 
         trackList.appendChild(btn);
     });
 
-    // 3. RENDER INICIAL: Mostrar la primera pista por defecto
+    // Por defecto, renderizar la primera pista al cargar
     if(score.tracks.length > 0) {
         at.renderTracks([score.tracks[0]]);
     }
-
+    
     aplicarColoresNegros(score);
 });
 
+ 
 // FUNCIÓN GLOBAL (Asegúrate de tenerla fuera de cualquier bloque)
 function cambiarInstrumento(trackIndex, newProgram) {
     if(!at.score) return;
