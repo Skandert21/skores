@@ -62,7 +62,7 @@ const atSettings = {
     display: {
         engine: 'canvas',
         layoutMode: 'page',
-        scale: 1, 
+       scale: 0.8, 
         upscale: 2,
         resources: {
             // NEGRO ABSOLUTO Y ALTO CONTRASTE
