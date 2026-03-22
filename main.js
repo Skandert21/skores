@@ -43,44 +43,47 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
 // --- 2. REGISTRO DE EVENTOS (LISTENERS) ---
 // Obligatorio: Declarar antes de cualquier función de carga (api.load)
 
-at.scoreLoaded.on((score) => {
-    console.log("Score cargado, aplicando mapeo de instrumentos...");
+ at.scoreLoaded.on((score) => {
+    console.log("Score GP cargado. Re-mapeando instrumentos...");
     let nextChannel = 0;
 
     score.tracks.forEach(track => {
         const info = track.playbackInfo;
         const name = (track.name || "").toLowerCase();
 
-        // Forzar banco 0 para SoundFont GeneralUser-GS
+        // 1. Forzar Banco 0 para compatibilidad con GeneralUser-GS.sf2
         info.bank = 0;
 
-        // Batería: Canal 10 MIDI (Índice 9 interno)
-        if (name.includes("drum") || name.includes("percussion")) {
+        // 2. Gestión de Canales MIDI (Evitar el 9 que es percusión)
+        if (name.includes("drum") || name.includes("percussion") || track.isPercussion) {
             info.program = 0;
             info.channel = 9; 
             return;
         }
 
-        // Prevenir colisión con el canal rítmico
         if (nextChannel === 9) nextChannel++;
         info.channel = nextChannel++;
 
-        // Mapeo basado en ID Decimal
-        if (name.includes("bass")) {
-            info.program = 34; // [0000:22] Pick Bass
-        } else if (name.includes("guitar")) {
-            info.program = 29; // [0000:1D] Overdrive Guitar
+        // 3. Mapeo Manual (Prioridad sobre lo que traiga el GP)
+        if (name.includes("bass") || name.includes("bajo")) {
+            info.program = 34; // Picked Bass
+        } else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) {
+            info.program = 29; // Overdriven Guitar
         } else {
-            info.program = 0;  // Piano genérico fallback
+            // Si no reconoce el nombre, mantenemos lo que traiga el GP 
+            // en lugar de forzar piano (0), para no romper teclados o vientos.
+            if(info.program <= 0) info.program = 25; // Guitarra acústica como fallback seguro
         }
         
-        console.log(`Mapeado: ${track.name} -> Program: ${info.program} en Canal: ${info.channel}`);
+        console.log(`Track: ${track.name} -> Canal: ${info.channel}, Program: ${info.program}`);
     });
 
-if (at.player) {
-        // Forzamos a que el sintetizador recargue los programas desde el modelo 'score'
+    // IMPORTANTE: Notificar al player que el modelo cambió
+    if (at.player && at.player.api) {
         at.player.api.rebuildSynthesizer(); 
     }
+    
+    // Mantener tus estilos visuales
     aplicarColoresNegros(score);
 });
 
