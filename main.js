@@ -77,15 +77,32 @@ at.scoreLoaded.on((score) => {
         console.log(`Mapeado: ${track.name} -> Program: ${info.program} en Canal: ${info.channel}`);
     });
 
+if (at.player) {
+        // Forzamos a que el sintetizador recargue los programas desde el modelo 'score'
+        at.player.api.rebuildSynthesizer(); 
+    }
     aplicarColoresNegros(score);
 });
 
 at.playerReady.on(() => {
-    console.log("Audio listo, aplicando parches finales...");
-    
-    // Forzar reconstrucción del sintetizador para asegurar la inyección de los parches
-    if (at.player?.api?.rebuildSynthesizer) {
-        try { at.player.api.rebuildSynthesizer(); } catch(e) {}
+    console.log("Audio listo. Verificando estado del sintetizador...");
+
+    if (at.player && at.player.api) {
+        try {
+            // 1. Resetear el mixer interno
+            if (typeof at.player.api.reset === 'function') at.player.api.reset();
+            
+            // 2. Forzar la reconstrucción con los nuevos programas (29, 34, etc.)
+            at.player.api.rebuildSynthesizer();
+            
+            // 3. LOG DE VERIFICACIÓN: Ver qué cargó el motor realmente
+            at.score.tracks.forEach((t, i) => {
+                console.log(`Verificación Final - Track ${i}: Program ${t.playbackInfo.program}`);
+            });
+
+        } catch(e) {
+            console.error("Error en parches finales:", e);
+        }
     }
 
     if (loaderContainer) loaderContainer.style.display = 'none';
