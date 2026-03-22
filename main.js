@@ -131,33 +131,53 @@ function aplicarColoresNegros(score) {
 
 
 // --- 3. CICLO DE VIDA: CARGA DE PARTITURA ---
-at.scoreLoaded.on(score => {
-    aplicarColoresNegros(score);
-    // 1. Forzar Programas MIDI (Quitar Piano)
-    score.tracks.forEach(track => {
-        const info = track.playbackInfo;
-        const name = (track.name || "").toLowerCase();
-        
-        info.bank = 0;
-        info.channel = i % 16;
-        if (name.includes("drum") || name.includes("perc")) {
-            info.program = 0;
-            info.channel = 9;
-        } else {
-            info.program = 27; // Guitarra Clean
-        }
-    });
+let nextChannel = 0;
 
- 
-    at.render();
+score.tracks.forEach(track => {
 
-      setTimeout(() => {
-        if (at.player?.api?.rebuildSynthesizer) {
-            at.player.api.rebuildSynthesizer();
-            console.log(" Synth rebuild OK");
-        }
-    }, 100);
+    const info = track.playbackInfo;
+    if (!info) return;
+
+    const name = (track.name || "").toLowerCase();
+
+    // --- DRUMS ---
+    if (name.includes("drum") || name.includes("perc")) {
+        info.channel = 9;     // canal GM batería
+        info.program = 0;
+        info.bank = 128;      // 🔥 CLAVE (banco batería en SF2)
+        return;
+    }
+
+    // --- OTROS INSTRUMENTOS ---
+    if (nextChannel === 9) nextChannel++; // saltar canal de drums
+
+    info.channel = nextChannel++;
+    info.bank = 0;
+
+    if (name.includes("bass")) {
+        info.program = 34;
+    } 
+    else if (name.includes("guitar")) {
+        info.program = 29; // 🔥 ojo: 29 = Overdriven (0-based)
+    } 
+    else if (name.includes("clean")) {
+        info.program = 27;
+    } 
+    else {
+        info.program = 0; // piano fallback
+    }
+
+    console.log("Track:", track.name, "Prog:", info.program, "Bank:", info.bank, "Ch:", info.channel);
 });
+  
+at.render();
+ 
+setTimeout(() => {
+    if (at.player?.api?.rebuildSynthesizer) {
+        at.player.api.rebuildSynthesizer();
+        console.log(" Synth rebuild OK");
+    }
+}, 100);
 
 // --- 4. CICLO DE VIDA: REPRODUCTOR LISTO ---
 at.playerReady.on(() => {
