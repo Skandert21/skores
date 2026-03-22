@@ -187,7 +187,7 @@ async function cargarPartituraProtegida(url, key, api) {
 
         // 2. DESCIFRADO (XOR directo sobre los bytes)
         for (let i = 0; i < data.length; i++) {
-            data[i] ^= key.charCodeAt(i % key.length);
+           data[i] ^= key[i % key.length];
         }
 
         // 3. VALIDACIÓN GP (Magic Bytes FICHIER o PK)
