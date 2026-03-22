@@ -9,7 +9,8 @@ const atSettings = {
     player: {
         enablePlayer: true,
         enableCursor: true,
-        enableWorker: false 
+        enableWorker: false,
+        soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2'
     },
     display: {
         engine: 'svg',
@@ -155,17 +156,7 @@ async function buildKey(trackId){
     return key;
 }
 
-async function initSoundFont() {
-    try {
-        const res = await fetch('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
-        const buffer = new Uint8Array(await res.arrayBuffer());
-        at.loadSoundFont(buffer); 
-        console.log("✅ SoundFont en búfer de memoria");
-    } catch (e) {
-        console.error("Error cargando SoundFont:", e);
-    }
-}
-
+ 
 async function cargarPartituraProtegida(url, key, api) {
     try {
         if(api.score) api.load(null); 
@@ -219,17 +210,15 @@ window.addEventListener('keydown', e => {
 });
 
 // --- 6. BOOTSTRAP (PUNTO DE ENTRADA PRINCIPAL) ---
+ 
 (async () => {
     const trackId = new URLSearchParams(window.location.search).get('track');
     if (trackId) {
         try {
-            // Cargar el banco de sonido como pre-requisito
-            await initSoundFont();
-            
             const keyBytes = await buildKey(trackId); 
             const urlR2 = `https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/${encodeURIComponent(trackId)}.xml.bin`;
             
-            // Invocar la carga. Esto detonará el listener 'scoreLoaded' del Bloque 2 automáticamente.
+            // Ya no hay await initSoundFont(). Directo a cargar la partitura.
             cargarPartituraProtegida(urlR2, keyBytes, at);
         } catch (error) {
             console.error("Falla de ejecución:", error);
