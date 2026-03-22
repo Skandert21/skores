@@ -68,8 +68,7 @@ const atSettings = {
             staffLineColor: '#000000',
             barLineColor: '#000000',
             fretNumberColor: '#000000',
-            fretNumberFont: '800 15px "Arial", sans-serif', // '800' evita que el upscale lo ponga gris
-            tablatureFont: 'bold 11px "Arial"',
+           
             standardNotationNoteHeadColor: '#000000',
             tablatureRestColor: 'transparent' 
         }
