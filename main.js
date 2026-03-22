@@ -78,8 +78,8 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
             }
 
             // 3. UI Feedback: Resaltar botón activo
-            document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#222");
-            btn.style.background = "#440000";
+            document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#2D333F");
+            btn.style.background = "#E63946";
         };
 
         trackList.appendChild(btn);
