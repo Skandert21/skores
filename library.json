@@ -17,6 +17,10 @@
 
   ],
   "La Mancha": [
+     { 
+      "nombre": "La Mancha", 
+      "url": "circo-dramaturgo/la-mancha/La-mancha" 
+    },
     { 
       "nombre": "Ni Una Negación Colérica Alcanzaría, Muestra Algo de Silencio", 
       "url": "circo-dramaturgo/la-mancha/Ni-Una-Negacion-Colerica-Alcanzaria-Muestra-Algo-de-Silencio" 
