@@ -89,8 +89,38 @@ const atSettings = {
 
 const at = new alphaTab.AlphaTabApi(el, atSettings);
 
+function aplicarColoresNegros(score) {
+    // Usamos el namespace seguro de la v1.8.x
+    const black = alphaTab.model.Color.fromJson("#000000");
+    const transparent = alphaTab.model.Color.fromJson("#00000000");
+
+    score.tracks.forEach(track => {
+        track.staves.forEach(staff => {
+            staff.bars.forEach(bar => {
+                bar.voices.forEach(voice => {
+                    voice.beats.forEach(beat => {
+                        // Inyectamos el estilo si no existe
+                        if (!beat.style) beat.style = new alphaTab.model.BeatStyle();
+                        
+                        // Silencios transparentes en TAB
+                        beat.style.colors.set(alphaTab.model.BeatSubElement.GuitarTabRests, transparent);
+                        
+                        beat.notes.forEach(note => {
+                            if (!note.style) note.style = new alphaTab.model.NoteStyle();
+                            
+                            // Forzado de Negro Absoluto en Números y Cabezas
+                            note.style.colors.set(alphaTab.model.NoteSubElement.GuitarTabFretNumber, black);
+                            note.style.colors.set(alphaTab.model.NoteSubElement.StandardNotationNoteHead, black);
+                        });
+                    });
+                });
+            });
+        });
+    });
+}
 // --- 3. CICLO DE VIDA: CARGA DE PARTITURA ---
 at.scoreLoaded.on(score => {
+    aplicarColoresNegros(score);
     // 1. Forzar Programas MIDI (Quitar Piano)
     score.tracks.forEach(track => {
         const info = track.playbackInfo;
