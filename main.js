@@ -14,7 +14,7 @@ const atSettings = {
     },
     display: {
         engine: 'svg',
-        layoutMode: 'horizontal',
+        layoutMode: 'page',
         autoScroll: 1,
         resources: {
             staffLineColor: '#222',
