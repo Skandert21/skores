@@ -64,18 +64,18 @@ async function cargarPartituraProtegida(url, key, api) {
 }
 
 // --- 2. CONFIGURACIÓN DE ALPHATAB ---
-// --- CONFIGURACIÓN TIPO SONGSTERR ---
+// --- CONFIGURACIÓN REPARADA ---
 const atSettings = {
     player: {
         enablePlayer: true,
         soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2',
         enableCursor: true,
-        enableWorker: false // Mantenlo en false para evitar el error de "start is null"
+        enableWorker: false 
     },
     display: {
         engine: 'canvas',
         layoutMode: 'page',
-        staveProfile: 'Default', // Cambiado de 'Score' a 'Default' para recuperar la TAB
+        staveProfile: 'Default', 
         upscale: 2,
         resources: {
             staffLineColor: '#222222',
@@ -86,58 +86,42 @@ const atSettings = {
         }
     },
     notation: {
-        // Forzamos explícitamente ambos sistemas
-        staveTypes: [
-            alphaTab.model.StaveType.Standard, 
-            alphaTab.model.StaveType.Tablature
-        ],
-        rhythmMode: 'ShowWithSymbols', // Necesario para que la TAB se vea completa
+        // 0 = Standard (Pentagrama), 1 = Tablature (Tablatura)
+        // Usamos enteros para evitar el error de "undefined"
+        staveTypes: [0, 1], 
+        rhythmMode: 'ShowWithSymbols', 
         voiceColor: '#000000'
     }
 };
+
 const at = new alphaTab.AlphaTabApi(el, atSettings);
 
-// --- GESTIÓN DE INSTRUMENTOS (V3) ---
+// --- CORRECCIÓN DE AUDIO Y RENDER ---
 at.scoreLoaded.on(score => {
-    // 1. Mapeo de Pistas
     score.tracks.forEach(track => {
         const info = track.playbackInfo;
         const name = (track.name || "").toLowerCase();
         
         info.bank = 0;
+        // Mapeo forzado: Priorizamos lo que el usuario espera oír
         if (name.includes("drum") || name.includes("perc")) {
             info.program = 0;
             info.channel = 9;
         } else if (name.includes("bass")) {
             info.program = 34;
         } else {
-            // FORZADO: Cualquier otra cosa es Guitarra Clean (27)
+            // Forzamos 27 (Guitarra Clean en GeneralUser-GS)
             info.program = 27; 
         }
     });
 
-    // 2. Render de la primera pista por defecto
+    // Forzar renderizado de la primera pista para asegurar que la TAB sea visible
     if(score.tracks.length > 0) {
         at.renderTracks([score.tracks[0]]);
     }
 
-    // 3. UI de Pistas
-    const trackList = document.getElementById('track-list');
-    if (trackList) {
-        trackList.innerHTML = '';
-        score.tracks.forEach((t) => {
-            const btn = document.createElement('button');
-            btn.className = 'btn-inst';
-            btn.innerText = t.name || `Pista ${t.index + 1}`;
-            btn.onclick = () => {
-                at.renderTracks([t]);
-                // Al cambiar de pista, reforzamos el sintetizador
-                at.player.rebuildSynthesizer();
-                document.querySelectorAll('.btn-inst').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            };
-            trackList.appendChild(btn);
-        });
+    if(at.player) {
+        at.player.rebuildSynthesizer();
     }
 });
 
