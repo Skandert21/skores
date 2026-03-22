@@ -82,7 +82,7 @@ const atSettings = {
             scoreWords: false,
             scoreMusic: false
         }
-    }
+    },
 };
 
 let soundFontLoaded = false;
