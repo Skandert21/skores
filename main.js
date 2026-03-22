@@ -69,75 +69,83 @@ const atSettings = {
     player: {
         enablePlayer: true,
         soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2',
-        enableCursor: true
+        enableCursor: true,
+        enableWorker: false // Mantenlo en false para evitar el error de "start is null"
     },
     display: {
         engine: 'canvas',
         layoutMode: 'page',
-        staveProfile: 'Score', // Layout más compacto
-        upscale: 2, // Mejora nitidez en pantallas Retina/4K
+        staveProfile: 'Default', // Cambiado de 'Score' a 'Default' para recuperar la TAB
+        upscale: 2,
         resources: {
             staffLineColor: '#222222',
             barLineColor: '#222222',
             fretNumberColor: '#000000',
-            fretNumberFont: 'bold 12px "Roboto", "Arial"',
+            fretNumberFont: 'bold 13px "Arial"',
             standardNotationNoteHeadColor: '#000000'
         }
     },
     notation: {
-        staveTypes: [0, 1],
-        rhythmMode: 'Hidden',
+        // Forzamos explícitamente ambos sistemas
+        staveTypes: [
+            alphaTab.model.StaveType.Standard, 
+            alphaTab.model.StaveType.Tablature
+        ],
+        rhythmMode: 'ShowWithSymbols', // Necesario para que la TAB se vea completa
         voiceColor: '#000000'
     }
 };
-
 const at = new alphaTab.AlphaTabApi(el, atSettings);
 
 // --- GESTIÓN DE INSTRUMENTOS (V3) ---
 at.scoreLoaded.on(score => {
+    // 1. Mapeo de Pistas
     score.tracks.forEach(track => {
         const info = track.playbackInfo;
         const name = (track.name || "").toLowerCase();
         
         info.bank = 0;
-        // Mapeo forzado por palabras clave
         if (name.includes("drum") || name.includes("perc")) {
-            info.program = 0; 
-            info.channel = 9; // El canal 9 es sagrado para percusión
+            info.program = 0;
+            info.channel = 9;
         } else if (name.includes("bass")) {
             info.program = 34;
-        } else if (name.includes("guitar")) {
-            // 29: Overdrive, 27: Clean, 24: Acoustic
-            info.program = name.includes("dist") ? 29 : 27; 
-        }
-
-        // Si el archivo viene mal mapeado y todo es 0 (piano), forzamos guitarra eléctrica
-        if(info.program === 0 && info.channel !== 9) {
+        } else {
+            // FORZADO: Cualquier otra cosa es Guitarra Clean (27)
             info.program = 27; 
         }
     });
 
-    // Sincronización inmediata del motor de audio
-    if(at.player) {
-        at.player.rebuildSynthesizer();
+    // 2. Render de la primera pista por defecto
+    if(score.tracks.length > 0) {
+        at.renderTracks([score.tracks[0]]);
     }
 
-    // Generar UI de pistas
+    // 3. UI de Pistas
     const trackList = document.getElementById('track-list');
     if (trackList) {
         trackList.innerHTML = '';
-        score.tracks.forEach((track) => {
+        score.tracks.forEach((t) => {
             const btn = document.createElement('button');
             btn.className = 'btn-inst';
-            btn.innerText = track.name || `Track ${track.index + 1}`;
+            btn.innerText = t.name || `Pista ${t.index + 1}`;
             btn.onclick = () => {
-                at.renderTracks([track]);
+                at.renderTracks([t]);
+                // Al cambiar de pista, reforzamos el sintetizador
+                at.player.rebuildSynthesizer();
                 document.querySelectorAll('.btn-inst').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
             };
             trackList.appendChild(btn);
         });
     }
+});
+
+// ESTO SOLUCIONA EL PIANO: Refrescar el motor cuando el audio esté listo
+at.playerReady.on(() => {
+    console.log("Audio listo, aplicando parches finales...");
+    at.player.rebuildSynthesizer(); 
+    if (loaderContainer) loaderContainer.style.display = 'none';
 });
 // 3. GESTIÓN DE CARGA (Sustituye a tu updateLoadingIndicator manual)
 at.playerReady.on(() => {
