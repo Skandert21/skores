@@ -55,27 +55,27 @@ async function cargarPartituraProtegida(url, key, api) {
 const atSettings = {
     player: {
         enablePlayer: true,
-        soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2', // URL estable
+       
         enableCursor: true,
         enableWorker: false 
     },
-    display: {
-        engine: 'canvas',
-        layoutMode: 'page',
-     
-        resources: {
-            // NEGRO ABSOLUTO Y ALTO CONTRASTE
-            staffLineColor: '#000000',
-            barLineColor: '#000000',
-            fretNumberColor: '#000000',
-           
-            standardNotationNoteHeadColor: '#000000',
-            tablatureRestColor: 'transparent' 
-        }
-    },
+ display: {
+    engine: 'svg',
+    layoutMode: 'horizontal',
+    autoScroll: 1,
+
+    resources: {
+        staffLineColor: '#222',
+        barLineColor: '#444',
+        fretNumberColor: '#111',
+        standardNotationNoteHeadColor: '#111',
+        tablatureRestColor: 'transparent' 
+    }
+},  
     notation: {
         staveTypes: [0, 1],
-        rhythmMode: 'Hidden', // Limpieza de silencios
+        rhythmMode: 'Hidden', 
+         extendBendArrowsOnTiedNotes: true
         elements: {
             scoreTitle: false,
             scoreSubTitle: false,
@@ -85,6 +85,17 @@ const atSettings = {
     }
 };
 
+let soundFontLoaded = false;
+
+async function initSoundFont() {
+    const res = await fetch('https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2');
+    const buffer = new Uint8Array(await res.arrayBuffer());
+
+    at.loadSoundFont(buffer);
+    soundFontLoaded = true;
+
+    console.log("✅ SoundFont cargado");
+}
 const at = new alphaTab.AlphaTabApi(el, atSettings);
 
 function aplicarColoresNegros(score) {
@@ -116,6 +127,8 @@ function aplicarColoresNegros(score) {
         });
     });
 }
+
+
 // --- 3. CICLO DE VIDA: CARGA DE PARTITURA ---
 at.scoreLoaded.on(score => {
     aplicarColoresNegros(score);
@@ -125,6 +138,7 @@ at.scoreLoaded.on(score => {
         const name = (track.name || "").toLowerCase();
         
         info.bank = 0;
+        info.channel = i % 16;
         if (name.includes("drum") || name.includes("perc")) {
             info.program = 0;
             info.channel = 9;
@@ -133,14 +147,15 @@ at.scoreLoaded.on(score => {
         }
     });
 
-    // 2. Renderizar visual para aplicar los colores negros
-    at.renderTracks([score.tracks[0]]);
+ 
+    at.render();
 
-    // 3. Reconstruir Sintetizador (Bypass seguro de interfaz)
-    const playerApi = at.player?.api || at.player;
-    if (playerApi && typeof playerApi.rebuildSynthesizer === 'function') {
-        try { playerApi.rebuildSynthesizer(); } catch(e) { console.warn("Rebuild falló en scoreLoaded"); }
-    }
+      setTimeout(() => {
+        if (at.player?.api?.rebuildSynthesizer) {
+            at.player.api.rebuildSynthesizer();
+            console.log(" Synth rebuild OK");
+        }
+    }, 100);
 });
 
 // --- 4. CICLO DE VIDA: REPRODUCTOR LISTO ---
@@ -217,6 +232,7 @@ async function buildKey(trackId){
         try {
             const urlR2 = `https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/${encodeURIComponent(trackId)}.xml.bin`;
             const keyBytes = await buildKey(trackId); 
+            await initSoundFont();
             cargarPartituraProtegida(urlR2, keyBytes, at);
         } catch (error) {
             console.error("Error en el flujo de inicio:", error);
