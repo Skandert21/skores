@@ -57,11 +57,11 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
         const btn = document.createElement('button');
         btn.className = "btn-instrument"; // Define estilos en tu CSS
         btn.innerText = trackName;
-        btn.style.cssText = "margin-right: 8px; padding: 8px 12px; background: #222; color: #cc0000; border: 1px solid #444; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s;";
+        btn.style.cssText = "margin-right: 8px; padding: 8px 12px; background: #2D333F; color: #FFFFFF; border: 1px solid #444; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s;";
 
         // Efecto Hover / Active
-        btn.onmouseover = () => btn.style.borderColor = "#cc0000";
-        btn.onmouseout = () => btn.style.borderColor = "#444";
+        btn.onmouseover = () => btn.style.borderColor = "#E63946";
+        btn.onmouseout = () => btn.style.borderColor = "#2D333F";
 
         btn.onclick = () => {
             // 1. CAMBIO DE VISTA: Renderizar solo esta pista
