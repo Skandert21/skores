@@ -131,43 +131,52 @@ function aplicarColoresNegros(score) {
 
 
 // --- 3. CICLO DE VIDA: CARGA DE PARTITURA ---
-let nextChannel = 0;
+  
+at.scoreLoaded.on(score => {
 
-score.tracks.forEach(track => {
+    aplicarColoresNegros(score);
 
-    const info = track.playbackInfo;
-    if (!info) return;
+    let nextChannel = 0;
 
-    const name = (track.name || "").toLowerCase();
+    score.tracks.forEach(track => {
 
-    // --- DRUMS ---
-    if (name.includes("drum") || name.includes("perc")) {
-        info.channel = 9;     // canal GM batería
-        info.program = 0;
-        info.bank = 128;      // 🔥 CLAVE (banco batería en SF2)
-        return;
+        const info = track.playbackInfo;
+        if (!info) return;
+
+        const name = (track.name || "").toLowerCase();
+
+        // DRUMS
+        if (name.includes("drum") || name.includes("perc")) {
+            info.channel = 9;
+            info.program = 0;
+            info.bank = 128;
+            return;
+        }
+
+        // otros instrumentos
+        if (nextChannel === 9) nextChannel++;
+
+        info.channel = nextChannel++;
+        info.bank = 0;
+
+        if (name.includes("bass")) {
+            info.program = 34;
+        } else if (name.includes("guitar")) {
+            info.program = 29;
+        } else {
+            info.program = 0;
+        }
+
+    });
+
+    // 🔥 IMPORTANTE: fuera del loop
+    at.render();
+
+    const playerApi = at.player?.api || at.player;
+    if (playerApi?.rebuildSynthesizer) {
+        playerApi.rebuildSynthesizer();
     }
 
-    // --- OTROS INSTRUMENTOS ---
-    if (nextChannel === 9) nextChannel++; // saltar canal de drums
-
-    info.channel = nextChannel++;
-    info.bank = 0;
-
-    if (name.includes("bass")) {
-        info.program = 34;
-    } 
-    else if (name.includes("guitar")) {
-        info.program = 29; // 🔥 ojo: 29 = Overdriven (0-based)
-    } 
-    else if (name.includes("clean")) {
-        info.program = 27;
-    } 
-    else {
-        info.program = 0; // piano fallback
-    }
-
-    console.log("Track:", track.name, "Prog:", info.program, "Bank:", info.bank, "Ch:", info.channel);
 });
   
 at.render();
