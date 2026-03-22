@@ -174,40 +174,45 @@ async function buildKey(trackId){
 }
 
  
-async function cargarPartituraProtegida(url, key, api) {
+async function cargarPartituraProtegida(url, keyBytes, api) {
     try {
         if(api.score) api.load(null); 
         
         const response = await fetch(url);
         if (!response.ok) throw new Error("Error en conexión a bucket R2");
         
-        const buffer = await response.arrayBuffer();
-        const data = new Uint8Array(buffer);
+        // 1. El archivo en R2 es un Base64 (según tu cifrador), lo leemos como texto
+        const base64Cifrado = await response.text();
 
-        // 1. DESCIFRADO: Operación pura byte a byte
-        for (let i = 0; i < data.length; i++) {
-            data[i] ^= key[i % key.length];
+        // 2. Usamos tu lógica de descifrado con IV y Seed (Simétrica a tu cifrador)
+        const binary = atob(base64Cifrado);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+        const iv = bytes.slice(0, 8);
+        const encrypted = bytes.slice(8);
+
+        // Reconstrucción de la semilla idéntica al cifrador
+        let seed = 0;
+        for (let i = 0; i < iv.length; i++) seed = (seed * 31 + iv[i]) >>> 0;
+
+        const decrypted = new Uint8Array(encrypted.length);
+        for (let i = 0; i < encrypted.length; i++) {
+            seed = (seed * 1664525 + 1013904223) >>> 0;
+            const k = keyBytes[i % keyBytes.length] ^ (seed & 255);
+            decrypted[i] = encrypted[i] ^ k;
         }
 
-        // 2. VALIDACIÓN: Basada en tu HEX real (50 4B 03 04)
-        // GP6/7/8 son contenedores ZIP (PK..)
-        const isModernGP = data[0] === 0x50 && data[1] === 0x4B; 
-        
-        // Soporte opcional para GP3/4/5 (Busca "FICHIER" en los primeros bytes)
-        const isLegacyGP = !isModernGP && 
-            [...data.slice(0, 30)].map(b => String.fromCharCode(b)).join('').includes("FICHIER");
+        // 3. VALIDACIÓN (Ahora sí debería dar 50 4B...)
+        const isGP = decrypted[0] === 0x50 && decrypted[1] === 0x4B; 
+        if (!isGP) throw new Error("Firma inválida tras descifrado complejo.");
 
-        if (!isModernGP && !isLegacyGP) {
-            console.error("Cabecera detectada:", data[0], data[1], data[2], data[3]);
-            throw new Error("El archivo descifrado no tiene una firma válida de Guitar Pro.");
-        }
-
-        // 3. CARGA: AlphaTab procesa el Uint8Array directamente
-        api.load(data);
+        // 4. CARGA
+        api.load(decrypted);
 
     } catch (e) {
-        console.error("Abortado:", e.message);
-        if (typeof loadingText !== 'undefined') loadingText.innerText = "Error crítico de partitura.";
+        console.error("Error de descifrado:", e.message);
+        if (loadingText) loadingText.innerText = "Error: Llave o formato incorrecto.";
     }
 }
 
