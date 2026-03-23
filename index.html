@@ -217,45 +217,58 @@ async function cargarAcordeon() {
 
     try {
         const respuesta = await fetch('library.json');
-        const secciones = await respuesta.json();
-
+        const datos = await respuesta.json();
         contenedor.innerHTML = '';
 
-        Object.keys(secciones).forEach(titulo => {
-            const folder = document.createElement('button');
-            folder.className = 'folder-btn';
-            folder.innerHTML = `<span>${titulo}</span> <span class="arrow">▼</span>`;
-            
-            const subMenu = document.createElement('div');
-            subMenu.className = 'sub-menu';
+        // Función mágica que se llama a sí misma para niveles infinitos
+        function renderizarNivel(data, parentContainer, esSubnivel = false) {
+            Object.keys(data).forEach(titulo => {
+                const contenido = data[titulo];
 
-            folder.onclick = () => {
-                const isOpen = subMenu.classList.toggle('open');
-                const arrow = folder.querySelector('.arrow');
-                if (arrow) arrow.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
-            };
-
-            secciones[titulo].forEach(track => {
-                const link = document.createElement('a');
-                link.innerText = track.nombre;
+                // 1. Crear Botón de Carpeta
+                const folder = document.createElement('button');
+                folder.className = 'folder-btn';
+                if(esSubnivel) folder.style.paddingLeft = "30px"; // Indentación visual
+                folder.innerHTML = `<span>${titulo}</span> <span class="arrow">▼</span>`;
                 
-                // --- El IF que controla si está disabled ---
-                if (track.url === "#") {
-                    link.className = 'track-item disabled';
-                    // No le asignamos href, así no es un link real
+                const subMenu = document.createElement('div');
+                subMenu.className = 'sub-menu';
+
+                folder.onclick = (e) => {
+                    e.stopPropagation(); // Evita conflictos en carpetas anidadas
+                    const isOpen = subMenu.classList.toggle('open');
+                    const arrow = folder.querySelector('.arrow');
+                    if (arrow) arrow.style.transform = isOpen ? 'rotate(180deg)' : 'rotate(0deg)';
+                };
+
+                // 2. ¿Es otra carpeta o es una lista de canciones?
+                if (!Array.isArray(contenido)) {
+                    // ES OTRA CARPETA: Llamada recursiva
+                    renderizarNivel(contenido, subMenu, true);
                 } else {
-                    link.className = 'track-item'; 
-                    link.href = `ver.html?track=${track.url}`;
+                    // SON CANCIONES: Crear links
+                    contenido.forEach(track => {
+                        const link = document.createElement('a');
+                        link.innerText = track.nombre;
+                        if (track.url === "#") {
+                            link.className = 'track-item disabled';
+                        } else {
+                            link.className = 'track-item'; 
+                            link.href = `ver.html?track=${track.url}`;
+                        }
+                        subMenu.appendChild(link);
+                    });
                 }
 
-                subMenu.appendChild(link);
+                parentContainer.appendChild(folder);
+                parentContainer.appendChild(subMenu);
             });
+        }
 
-            contenedor.appendChild(folder);
-            contenedor.appendChild(subMenu);
-        });
+        renderizarNivel(datos, contenedor);
+
     } catch (error) {
-        console.error("Error cargando el JSON:", error);
+        console.error("Error en la jerarquía del JSON:", error);
     }
 }
 

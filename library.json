@@ -1,5 +1,7 @@
-{
-  "Tuve un sueño, Desperté llorando": [
+  
+ {
+  "CIRCO DRAMATURGO":{
+  "Tuve un sueño, Desperté llorando, No estaba Durmiendo": [
    
      { 
       "nombre": "Esto que lees no es un título y esta no es una canción", 
@@ -33,18 +35,11 @@
       "nombre": "El Señor de Lágrimas", 
       "url": "circo-dramaturgo/la-mancha/El-Senor-de-Lagrimas" 
     }
-
-  ],
-  "Alógena": [ 
-    { 
-      "nombre": "Selva", 
-      "url": "alogena/Selva" 
-    },
-  
-    { 
-      "nombre": "Contracorriente", 
-      "url": "alogena/Contracorriente" 
-    },
+ ]
+},
+ 
+ "ALÓGENA" :{
+  "Clima Invernal": [ 
       { 
       "nombre": "Pumas", 
       "url": "alogena/Pumas" 
@@ -58,5 +53,21 @@
       "nombre": "Track no disponible", 
       "url": "#" 
     }
+  ],
+"Naufragio": [ 
+    { 
+      "nombre": "Selva", 
+      "url": "alogena/Selva" 
+    },
+  
+    { 
+      "nombre": "Contracorriente", 
+      "url": "alogena/Contracorriente" 
+    },
+    { 
+      "nombre": "Track no disponible", 
+      "url": "#" 
+    }
   ]
+}
 }
