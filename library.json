@@ -2,7 +2,14 @@
  {
   "CIRCO DRAMATURGO":{
   "Tuve un sueño, Desperté llorando, No estaba Durmiendo": [
-   
+   { 
+      "nombre": "Ciudades Antiguas", 
+      "url": "circo-dramaturgo/desperte-llorando/Ciudades-Antiguas" 
+    },
+      { 
+      "nombre": "Silogismos y Palíndromos como medio de desfogue", 
+      "url": "circo-dramaturgo/desperte-llorando/Silogismos-y-Palindromos-como-medio-de-desfogue" 
+    },
      { 
       "nombre": "Esto que lees no es un título y esta no es una canción", 
       "url": "circo-dramaturgo/desperte-llorando/Esto-que-lees-no-es-un-titulo-y-esta-no-es-una-cancion" 
