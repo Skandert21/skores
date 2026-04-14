@@ -10,6 +10,7 @@ const atSettings = {
         enablePlayer: true,
         enableCursor: true,
         enableWorker: true,
+        workerScript: './alphaTab.min.js',  
         soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2'
     },
     display: {
