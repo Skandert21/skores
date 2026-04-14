@@ -9,12 +9,12 @@ const atSettings = {
     player: {
         enablePlayer: true,
         enableCursor: true,
-        enableWorker: false,
+        enableWorker: true,
         soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2'
     },
     display: {
-        engine: 'svg',
-        layoutMode: 'page',
+        engine: 'canvas',
+        layoutMode: 'horizontal',
         autoScroll: 1,
         resources: {
             staffLineColor: '#222',
@@ -34,6 +34,10 @@ const atSettings = {
         staveTypes: [0, 1],
         rhythmMode: 'Hidden',
         extendBendArrowsOnTiedNotes: true
+    },
+    core: {
+        engine: 'canvas',
+        useWorkers: true // <--- OBLIGATORIO: Mueve el parseo del archivo GP a un Web Worker
     }
 };
 
@@ -228,9 +232,13 @@ async function cargarPartituraProtegida(url, keyBytes, api) {
         // 3. VALIDACIÓN (Ahora sí debería dar 50 4B...)
         const isGP = decrypted[0] === 0x50 && decrypted[1] === 0x4B; 
         if (!isGP) throw new Error("Firma inválida tras descifrado complejo.");
+encrypted = null; 
 
-        // 4. CARGA
-        api.load(decrypted);
+// 2. Carga la partitura
+api.load(decrypted);
+
+// 3. Destruye el resultado
+decrypted = null;
 
     } catch (e) {
         console.error("Error de descifrado:", e.message);
