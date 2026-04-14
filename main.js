@@ -214,7 +214,7 @@ async function cargarPartituraProtegida(url, keyBytes, api) {
         const iv = bytes.slice(0, 8);
         const encrypted = bytes.slice(8);
 
-        // Reconstrucción de la semilla idéntica al cifrador
+        
         let seed = 0;
         for (let i = 0; i < iv.length; i++) seed = (seed * 31 + iv[i]) >>> 0;
 
@@ -225,20 +225,20 @@ async function cargarPartituraProtegida(url, keyBytes, api) {
             decrypted[i] = encrypted[i] ^ k;
         }
 
-        // 3. VALIDACIÓN (Ahora sí debería dar 50 4B...)
+         
         const isGP = decrypted[0] === 0x50 && decrypted[1] === 0x4B; 
         if (!isGP) throw new Error("Firma inválida tras descifrado complejo.");
 
-        // 4. CARGA
-        api.load(decrypted);
+        encrypted = null;  
+        api.load(decrypted); 
+        decrypted = null;
 
     } catch (e) {
         console.error("Error de descifrado:", e.message);
         if (loadingText) loadingText.innerText = "Error: Llave o formato incorrecto.";
     }
 }
-
-// --- 5. INTERACCIONES DEL DOM ---
+ 
 playPause.onclick = async e => {
     e.preventDefault();
     if (at.player?.api?.audioContext?.state === 'suspended') {
