@@ -232,13 +232,9 @@ async function cargarPartituraProtegida(url, keyBytes, api) {
         // 3. VALIDACIÓN (Ahora sí debería dar 50 4B...)
         const isGP = decrypted[0] === 0x50 && decrypted[1] === 0x4B; 
         if (!isGP) throw new Error("Firma inválida tras descifrado complejo.");
-encrypted = null; 
 
-// 2. Carga la partitura
-api.load(decrypted);
-
-// 3. Destruye el resultado
-decrypted = null;
+        // 4. CARGA
+        api.load(decrypted);
 
     } catch (e) {
         console.error("Error de descifrado:", e.message);
