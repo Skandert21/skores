@@ -1,6 +1,35 @@
   
  {
   "CIRCO DRAMATURGO":{
+
+      "Desconozco la causa de los acontecimientos": [
+   { 
+      "nombre": "Esas sombras me hablan y me intentan consolar bajo la lluvia", 
+      "url": "circo-dramaturgo/desconozco-las-causas/Esas-sombras-me-hablan-y-me-intentan-consolar-bajo-la-lluvia" 
+    },
+      { 
+      "nombre": "Disculpa por preguntar algo que previamente ya habia preguntado bajo un contexto diferente que terminaría dando la misma respuesta", 
+      "url": "circo-dramaturgo/desconozco-las-causas/Disculpa-por-preguntar-algo-que-previamente-ya-habia-preguntado-bajo-un-contexto-diferente-que-terminaria-dando-la-misma-respuesta" 
+    },
+    { 
+      "nombre": "Centro", 
+      "url": "circo-dramaturgo/desconozco-las-causas/Centro" 
+    },
+     { 
+      "nombre": "El lado negativo de las cosas", 
+      "url": "circo-dramaturgo/desconozco-las-causas/El-lado-negativo-de-las-cosas" 
+    },
+      { 
+      "nombre": "El efecto de un reflector de ondas viejo sobre un ser dañado.gp", 
+      "url": "circo-dramaturgo/desconozco-las-causas/El-efecto-de-un-reflector-de-ondas-viejo-sobre-un-ser-danado" 
+    },
+     { 
+      "nombre": "Propósito", 
+      "url": "circo-dramaturgo/desconozco-las-causas/Proposito" 
+    } 
+
+
+  ],
   "Tuve un sueño, Desperté llorando, No estaba Durmiendo": [
    { 
       "nombre": "Ciudades Antiguas", 
@@ -25,6 +54,10 @@
      { 
       "nombre": "El vacío y la muerte no son algo literal, son solo una analogía", 
       "url": "circo-dramaturgo/desperte-llorando/El-vacio-y-la-muerte-no-son-algo-literal-son-solo-una-analogia" 
+    },
+    { 
+      "nombre": "No era un fantasma, solo era un estafermo", 
+      "url": "circo-dramaturgo/desperte-llorando/No-era-un-fantasma-solo-era-un-estafermo" 
     }
 
 
