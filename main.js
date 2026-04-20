@@ -41,9 +41,6 @@ const atSettings = {
 // Instancia global del motor
 const at = new alphaTab.AlphaTabApi(el, atSettings);
 
-// --- 2. REGISTRO DE EVENTOS (LISTENERS) ---
-// Obligatorio: Declarar antes de cualquier función de carga (api.load)
-
  
  at.scoreLoaded.on((score) => {
     const trackList = document.getElementById('track-list');
@@ -56,7 +53,7 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
         
         // Crear el botón de instrumento
         const btn = document.createElement('button');
-        btn.className = "btn-instrument"; // Define estilos en tu CSS
+        btn.className = "btn-instrument"; 
         btn.innerText = trackName;
         btn.style.cssText = "margin-right: 8px; padding: 8px 12px; background: #2D333F; color: #FFFFFF; border: 1px solid #444; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s;";
 
@@ -64,11 +61,9 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
         btn.onmouseover = () => btn.style.borderColor = "#E63946";
         btn.onmouseout = () => btn.style.borderColor = "#2D333F";
 
-        btn.onclick = () => {
-            // 1. CAMBIO DE VISTA: Renderizar solo esta pista
+        btn.onclick = () => { 
             at.renderTracks([track]); 
-
-            // 2. CAMBIO DE AUDIO: Asignar programa según el nombre (Lógica Senior)
+ 
             const name = trackName.toLowerCase();
             if (name.includes("bass") || name.includes("bajo")) track.playbackInfo.program = 34;
             else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) track.playbackInfo.program = 29;
@@ -77,16 +72,14 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
             if (at.player && at.player.api) {
                 at.player.api.rebuildSynthesizer();
             }
-
-            // 3. UI Feedback: Resaltar botón activo
+ 
             document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#2D333F");
             btn.style.background = "#E63946";
         };
 
         trackList.appendChild(btn);
     });
-
-    // Por defecto, renderizar la primera pista al cargar
+ 
     if(score.tracks.length > 0) {
         at.renderTracks([score.tracks[0]]);
     }
@@ -94,8 +87,7 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
     aplicarColoresNegros(score);
 });
 
- 
-// FUNCIÓN GLOBAL (Asegúrate de tenerla fuera de cualquier bloque)
+  
 function cambiarInstrumento(trackIndex, newProgram) {
     if(!at.score) return;
     const track = at.score.tracks[trackIndex];
@@ -140,8 +132,7 @@ at.playerStateChanged.on(e => {
         playPause.innerText = (e.state === 1) ? "⏸ PAUSE" : "▶ PLAY";
     }
 });
-
-// --- 3. LÓGICA DE CRIPTOGRAFÍA Y ESTILIZADO ---
+ 
 function decryptXOR(input, keyBytes) {
     const binary = atob(input);
     const bytes = new Uint8Array(binary.length);
@@ -184,8 +175,7 @@ function aplicarColoresNegros(score) {
         });
     });
 }
-
-// --- 4. CONTROLADORES DE CARGA DE DATOS ---
+ 
 async function buildKey(trackId){
     const response = await fetch(`https://skores-back.onrender.com/api/request-key/${encodeURIComponent(trackId)}`);
     if(!response.ok) throw new Error("Fallo en la obtención de clave en servidor");
@@ -196,46 +186,54 @@ async function buildKey(trackId){
     return key;
 }
 
- 
-async function cargarPartituraProtegida(url, keyBytes, api) {
+ async function cargarPartituraProtegida(url, keyBytes, api) {
     try {
         if(api.score) api.load(null); 
         
         const response = await fetch(url);
         if (!response.ok) throw new Error("Error en conexión a bucket R2");
-        
-        // 1. El archivo en R2 es un Base64 (según tu cifrador), lo leemos como texto
-        const base64Cifrado = await response.text();
+         
+        let base64Data = await response.text();
+ 
+        let binary = atob(base64Data);
+        base64Data = null;  
 
-        // 2. Usamos tu lógica de descifrado con IV y Seed (Simétrica a tu cifrador)
-        const binary = atob(base64Cifrado);
-        const bytes = new Uint8Array(binary.length);
-        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-
-        const iv = bytes.slice(0, 8);
-        const encrypted = bytes.slice(8);
-
-        // Reconstrucción de la semilla idéntica al cifrador
+        let rawBytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) rawBytes[i] = binary.charCodeAt(i);
+        binary = null;  
+        const iv = rawBytes.slice(0, 8);
+        let encrypted = rawBytes.slice(8);
+        rawBytes = null;  
         let seed = 0;
         for (let i = 0; i < iv.length; i++) seed = (seed * 31 + iv[i]) >>> 0;
-
-        const decrypted = new Uint8Array(encrypted.length);
+ 
+        let decrypted = new Uint8Array(encrypted.length);
         for (let i = 0; i < encrypted.length; i++) {
             seed = (seed * 1664525 + 1013904223) >>> 0;
             const k = keyBytes[i % keyBytes.length] ^ (seed & 255);
             decrypted[i] = encrypted[i] ^ k;
         }
+        
+        encrypted = null;  
 
-        // 3. VALIDACIÓN (Ahora sí debería dar 50 4B...)
-        const isGP = decrypted[0] === 0x50 && decrypted[1] === 0x4B; 
-        if (!isGP) throw new Error("Firma inválida tras descifrado complejo.");
+        //  VALIDACIÓN DUAL (GP6: 42 43 | GP7/8: 50 4B)
+        const isPK = decrypted[0] === 0x50 && decrypted[1] === 0x4B; 
+        const isBC = decrypted[0] === 0x42 && decrypted[1] === 0x43; 
 
-        // 4. CARGA
+        if (!(isPK || isBC)) {
+            const hex = decrypted[0].toString(16) + decrypted[1].toString(16);
+            decrypted = null;
+            throw new Error(`Firma inválida: 0x${hex}`);
+        }
+ 
         api.load(decrypted);
+        decrypted = null; 
 
     } catch (e) {
-        console.error("Error de descifrado:", e.message);
-        if (loadingText) loadingText.innerText = "Error: Llave o formato incorrecto.";
+        console.error("Error técnico:", e.message);
+        if (typeof loadingText !== 'undefined' && loadingText) {
+            loadingText.innerText = "Error: Llave o formato incorrecto.";
+        }
     }
 }
 

@@ -21,11 +21,11 @@
     },
       { 
       "nombre": "El efecto de un reflector de ondas viejo sobre un ser dañado.gp", 
-      "url": "circo-dramaturgo/desconozco-las-causas/El-efecto-de-un-reflector-de-ondas-viejo-sobre-un-ser-danado" 
+      "url": "#" 
     },
      { 
       "nombre": "Propósito", 
-      "url": "circo-dramaturgo/desconozco-las-causas/Proposito" 
+      "url": "#" 
     } 
 
 
@@ -113,5 +113,44 @@
       "url": "#" 
     }
   ]
-}
+},
+"DARK CHILDHOOD":{
+
+      "Estigma Incandescente": [
+   { 
+      "nombre": "Esas sombras me hablan y me intentan consolar bajo la lluvia", 
+      "url": "circo-dramaturgo/desconozco-las-causas/Esas-sombras-me-hablan-y-me-intentan-consolar-bajo-la-lluvia" 
+    } 
+
+  ],  "Cenizas de un Estigma Incandescente": [
+   { 
+      "nombre": "Esas sombras me hablan y me intentan consolar bajo la lluvia", 
+      "url": "circo-dramaturgo/desconozco-las-causas/Esas-sombras-me-hablan-y-me-intentan-consolar-bajo-la-lluvia" 
+    } 
+
+  ],
+    "Sonder": [
+   { 
+      "nombre": "Esas sombras me hablan y me intentan consolar bajo la lluvia", 
+      "url": "circo-dramaturgo/desconozco-las-causas/Esas-sombras-me-hablan-y-me-intentan-consolar-bajo-la-lluvia" 
+    } 
+
+  ],
+  "Podrida Humanidad I": [
+   { 
+      "nombre": "Ciudades Antiguas", 
+      "url": "circo-dramaturgo/desperte-llorando/Ciudades-Antiguas" 
+    } 
+
+
+  ],
+  "Podrida Humanidad II": [
+     { 
+      "nombre": "Me arrancó el rostro", 
+      "url": "dark-childhood/podrida-humanidad-ii/Me-arranco-el-rostro" 
+    } 
+ ]
+},
+
+
 }
