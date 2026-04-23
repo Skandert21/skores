@@ -20,7 +20,7 @@
       "url": "circo-dramaturgo/desconozco-las-causas/El-lado-negativo-de-las-cosas" 
     },
       { 
-      "nombre": "El efecto de un reflector de ondas viejo sobre un ser dañado.gp", 
+      "nombre": "El efecto de un reflector de ondas viejo sobre un ser dañado", 
       "url": "#" 
     },
      { 
@@ -94,7 +94,20 @@
       "url": "alogena/Tocaremos-el-cielo" 
     },
     { 
-      "nombre": "Track no disponible", 
+      "nombre": "No sé qué decir", 
+      "url": "alogena/No-se-que-decir" 
+    },
+    { 
+      "nombre": "El Peón", 
+      "url": "alogena/el-peon" 
+    },
+     { 
+      "nombre": "Olvidé tu nombre", 
+      "url": "alogena/Olvide-tu-nombre" 
+    },
+
+    { 
+      "nombre": "Usted", 
       "url": "#" 
     }
   ],
@@ -118,28 +131,28 @@
 
       "Estigma Incandescente": [
    { 
-      "nombre": "Esas sombras me hablan y me intentan consolar bajo la lluvia", 
-      "url": "circo-dramaturgo/desconozco-las-causas/Esas-sombras-me-hablan-y-me-intentan-consolar-bajo-la-lluvia" 
+      "nombre": "Bermellón Cinabrio", 
+      "url": "#" 
     } 
 
   ],  "Cenizas de un Estigma Incandescente": [
    { 
-      "nombre": "Esas sombras me hablan y me intentan consolar bajo la lluvia", 
-      "url": "circo-dramaturgo/desconozco-las-causas/Esas-sombras-me-hablan-y-me-intentan-consolar-bajo-la-lluvia" 
+      "nombre": "Cenizas de un Estigma Incandescente", 
+      "url": "#" 
     } 
 
   ],
     "Sonder": [
    { 
-      "nombre": "Esas sombras me hablan y me intentan consolar bajo la lluvia", 
-      "url": "circo-dramaturgo/desconozco-las-causas/Esas-sombras-me-hablan-y-me-intentan-consolar-bajo-la-lluvia" 
+      "nombre": "Monachopsis", 
+      "url": "dark-childhood/sonder/Monachopsis" 
     } 
 
   ],
   "Podrida Humanidad I": [
    { 
-      "nombre": "Ciudades Antiguas", 
-      "url": "circo-dramaturgo/desperte-llorando/Ciudades-Antiguas" 
+      "nombre": "Agujas", 
+      "url": "#" 
     } 
 
 
