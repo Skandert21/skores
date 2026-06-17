@@ -313,6 +313,31 @@
         input[type="range"]::-moz-range-progress { background: var(--accent); height:6px; }
         input[type="range"]::-ms-fill-lower { background: var(--accent); }
         input[type="range"] { accent-color: var(--accent); }
+
+        /* --- BARRA DE INSTRUMENTOS JUSTIFICADA --- */
+#track-list {
+    display: grid;
+    /* Columna 1: fija para texto, Columna 2: flexible para el slider */
+    grid-template-columns: minmax(160px, auto) 1fr; 
+    gap: 15px;
+    align-items: center;
+    width: 100%;
+    margin-top: 20px;
+    padding: 10px;
+}
+
+/* Contenedor individual por fila */
+.instrument-row {
+    display: contents; /* Permite que el grid vea a los hijos como celdas */
+}
+
+.instrument-label {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--subtext);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
     </style>
 </head>
 <body>
