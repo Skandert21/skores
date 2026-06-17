@@ -1,8 +1,34 @@
-// DOM Elements
-const el = document.querySelector('#alphaTab');
-const playPause = document.querySelector('#play-pause-btn');
-const loaderContainer = document.getElementById('loader-container');
-const loadingText = document.getElementById('loading-text');
+// DOM Elements (will be queried after DOM ready)
+let el;
+let playPause;
+let loaderContainer;
+let loadingText;
+
+// Global AlphaTab instance placeholder
+let at;
+
+// Ensure alphaTab script is loaded before initializing
+async function waitForAlphaTab(timeout = 5000) {
+    const start = Date.now();
+    while (typeof window.alphaTab === 'undefined') {
+        if (Date.now() - start > timeout) throw new Error('alphaTab not available after timeout');
+        await new Promise(r => setTimeout(r, 100));
+    }
+}
+
+async function init() {
+    el = document.querySelector('#alphaTab');
+    playPause = document.querySelector('#play-pause-btn');
+    loaderContainer = document.getElementById('loader-container');
+    loadingText = document.getElementById('loading-text');
+
+    try {
+        await waitForAlphaTab(8000);
+    } catch (e) {
+        console.error('alphaTab library failed to load:', e);
+        if (loadingText) loadingText.innerText = 'Error: AlphaTab no disponible.';
+        return;
+    }
 
 // --- 1. CONFIGURACIÓN DE MOTOR (VISUAL Y AUDIO) ---
 const atSettings = {
@@ -38,11 +64,16 @@ const atSettings = {
     }
 };
 
-// Instancia global del motor
-const at = new alphaTab.AlphaTabApi(el, atSettings);
+    // Instancia global del motor (creada después de asegurar alphaTab)
+    try {
+        at = new alphaTab.AlphaTabApi(el, atSettings);
+    } catch (err) {
+        console.error('No se pudo crear AlphaTabApi:', err);
+        if (loadingText) loadingText.innerText = 'Error: No se pudo inicializar el motor.';
+        return;
+    }
 
- 
- at.scoreLoaded.on((score) => {
+    at.scoreLoaded.on((score) => {
     const trackList = document.getElementById('track-list');
     if (!trackList) return;
 
@@ -117,6 +148,40 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
     // Sincronizar sliders con el motor si está disponible
     refreshSlidersFromPlayer();
 });
+
+    // Registrar eventos del player (después de crear `at`)
+    if (at.playerReady && typeof at.playerReady.on === 'function') {
+        at.playerReady.on(() => {
+            console.log("Audio listo. Verificando estado del sintetizador...");
+
+            if (at.player && at.player.api) {
+                try {
+                    if (typeof at.player.api.reset === 'function') at.player.api.reset();
+                    at.player.api.rebuildSynthesizer();
+                    at.score.tracks.forEach((t, i) => {
+                        console.log(`Verificación Final - Track ${i}: Program ${t.playbackInfo.program}`);
+                    });
+                } catch(e) {
+                    console.error("Error en parches finales:", e);
+                }
+            }
+
+            if (loaderContainer) loaderContainer.style.display = 'none';
+            if (playPause) {
+                playPause.style.opacity = "1";
+                playPause.innerText = "▶ PLAY";
+            }
+            refreshSlidersFromPlayer();
+        });
+    }
+
+    if (at.playerStateChanged && typeof at.playerStateChanged.on === 'function') {
+        at.playerStateChanged.on(e => {
+            if (playPause) {
+                playPause.innerText = (e.state === 1) ? "⏸ PAUSE" : "▶ PLAY";
+            }
+        });
+    }
 
     // --- Mapa local de volúmenes por pista (estado)
     const trackVolumes = {};
@@ -263,42 +328,7 @@ function cambiarInstrumento(trackIndex, newProgram) {
         console.log(`Track ${trackIndex} actualizado a programa ${newProgram}`);
     }
 }
-
-at.playerReady.on(() => {
-    console.log("Audio listo. Verificando estado del sintetizador...");
-
-    if (at.player && at.player.api) {
-        try {
-            // 1. Resetear el mixer interno
-            if (typeof at.player.api.reset === 'function') at.player.api.reset();
-            
-            // 2. Forzar la reconstrucción con los nuevos programas (29, 34, etc.)
-            at.player.api.rebuildSynthesizer();
-            
-            // 3. LOG DE VERIFICACIÓN: Ver qué cargó el motor realmente
-            at.score.tracks.forEach((t, i) => {
-                console.log(`Verificación Final - Track ${i}: Program ${t.playbackInfo.program}`);
-            });
-
-        } catch(e) {
-            console.error("Error en parches finales:", e);
-        }
-    }
-
-    if (loaderContainer) loaderContainer.style.display = 'none';
-    if (playPause) {
-        playPause.style.opacity = "1";
-        playPause.innerText = "▶ PLAY";
-    }
-    // refrescar sliders cuando el player está listo
-    refreshSlidersFromPlayer();
-});
-
-at.playerStateChanged.on(e => {
-    if (playPause) {
-        playPause.innerText = (e.state === 1) ? "⏸ PAUSE" : "▶ PLAY";
-    }
-});
+ 
  
 function decryptXOR(input, keyBytes) {
     const binary = atob(input);
@@ -460,5 +490,9 @@ if (lockBtnFooter) {
         }
     }
 })();
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+});
  
  

@@ -6,6 +6,22 @@
     <title>SKores - Visor</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.8.1/dist/alphaTab.min.js"></script>
+    <script>
+        // Fallback local loader: si la librería no se cargó desde CDN, cargar la copia local
+        (function(){
+            function loadLocal() {
+                if (typeof alphaTab !== 'undefined') return;
+                var s = document.createElement('script');
+                s.src = 'alphaTab.min.js';
+                s.onload = function(){ console.info('alphaTab loaded from local copy'); };
+                s.onerror = function(){ console.error('Failed to load local alphaTab fallback'); };
+                document.head.appendChild(s);
+            }
+
+            // Si el CDN script ya falló, alphaTab estará undefined. Esperamos un tick y comprobamos.
+            setTimeout(function(){ if (typeof alphaTab === 'undefined') loadLocal(); }, 50);
+        })();
+    </script>
     
     <style>
         :root {
