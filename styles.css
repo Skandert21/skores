@@ -386,3 +386,10 @@ body {
     margin: 0 !important;
     padding: 20px !important;
 }
+
+/* Botón hamburguesa alternativo: visible sólo en móvil y encima del contenido */
+.mobile-only { display: none; }
+@media (max-width: 768px) {
+    .mobile-only { display: block; position: fixed; top: 12px; right: 12px; z-index: 1300; }
+    .mobile-only.menu-toggle { width: 44px; height: 44px; }
+}

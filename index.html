@@ -106,7 +106,8 @@
 <body>
 
     <div class="vignette"></div>
-    
+    <!-- Botón hamburguesa visible en móvil (fuera del sidebar para permanecer accesible) -->
+    <button id="mobile-menu-toggle" class="menu-toggle mobile-only" aria-label="Abrir menú">☰</button>
     
 
     <aside class="sidebar" id="sidebar">
@@ -144,7 +145,8 @@
     </main>
 
     <script>
-  const menuToggle = document.getElementById('menu-toggle');
+const menuToggle = document.getElementById('menu-toggle');
+const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
 const sidebar = document.getElementById('sidebar');
 
 function updateMobileMode() {
@@ -160,23 +162,33 @@ function updateMobileMode() {
     }
 }
 
-menuToggle.addEventListener('click', () => {
+function toggleSidebarMobile() {
+    if (sidebar.classList.contains('mobile-open')) {
+        sidebar.classList.remove('mobile-open');
+        sidebar.classList.add('mobile-hidden', 'mobile-collapsed');
+        if (menuToggle) menuToggle.innerText = '☰';
+        if (mobileMenuToggle) mobileMenuToggle.innerText = '☰';
+    } else {
+        sidebar.classList.remove('mobile-hidden', 'mobile-collapsed');
+        sidebar.classList.add('mobile-open');
+        if (menuToggle) menuToggle.innerText = '✕';
+        if (mobileMenuToggle) mobileMenuToggle.innerText = '✕';
+    }
+}
+
+if (menuToggle) menuToggle.addEventListener('click', () => {
     if (window.innerWidth <= 768) {
         // mobile flow: toggle overlay
-        if (sidebar.classList.contains('mobile-open')) {
-            sidebar.classList.remove('mobile-open');
-            sidebar.classList.add('mobile-hidden', 'mobile-collapsed');
-            menuToggle.innerText = '☰';
-        } else {
-            sidebar.classList.remove('mobile-hidden', 'mobile-collapsed');
-            sidebar.classList.add('mobile-open');
-            menuToggle.innerText = '✕';
-        }
+        toggleSidebarMobile();
     } else {
         // desktop flow: original behavior
         sidebar.classList.toggle('closed');
         menuToggle.innerText = sidebar.classList.contains('closed') ? '☰' : '✕';
     }
+});
+
+if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', () => {
+    if (window.innerWidth <= 768) toggleSidebarMobile();
 });
 
 window.addEventListener('resize', updateMobileMode);

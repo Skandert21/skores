@@ -114,38 +114,52 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
     }
     
     aplicarColoresNegros(score);
+    // Sincronizar sliders con el motor si está disponible
+    refreshSlidersFromPlayer();
 });
 
     // --- Mapa local de volúmenes por pista (estado)
     const trackVolumes = {};
 
     /**
-     * Intento robusto de ajustar el volumen por pista usando la API de AlphaTab
-     * intenta varias rutas: APIs explícitas del player, o fallback a playbackInfo + rebuildSynthesizer
+     * Ajusta el volumen por pista usando las APIs internas de AlphaTab cuando están disponibles.
+     * Se intenta: api.setChannelVolume / api.setChannelMixVolume / api._synthesizer.channelSetMixVolume
+     * Si no hay API disponible, hace fallback a `playbackInfo.volume` y rebuildea el sintetizador.
      */
     function setTrackVolume(trackIndex, gain) {
         trackVolumes[trackIndex] = gain;
         if (!at || !at.player) return;
 
+        const api = at.player.api || at.player;
+        // Determinar canal MIDI asociado a la pista (si existe)
+        let channel = trackIndex;
         try {
-            const api = at.player.api;
-            // 1) API directa (si existe)
-            if (api && typeof api.setTrackVolume === 'function') {
-                api.setTrackVolume(trackIndex, gain);
+            if (at.score && at.score.tracks && at.score.tracks[trackIndex] && at.score.tracks[trackIndex].playbackInfo) {
+                const p = at.score.tracks[trackIndex].playbackInfo;
+                if (Number.isFinite(p.primaryChannel)) channel = p.primaryChannel;
+                else if (Number.isFinite(p.secondaryChannel)) channel = p.secondaryChannel;
+            }
+
+            // Rutas posibles según versiones internas
+            if (api && typeof api.setChannelVolume === 'function') {
+                api.setChannelVolume(channel, gain);
                 return;
             }
 
-            // 2) Mixer/buses (nombres comunes en distintas versiones)
-            if (api && api.mixer && typeof api.mixer.setVolume === 'function') {
-                api.mixer.setVolume(trackIndex, gain);
+            if (api && typeof api.setChannelMixVolume === 'function') {
+                api.setChannelMixVolume(channel, gain);
                 return;
             }
 
-            // 3) Fallback: escribir en playbackInfo.volume (si existe) y reconstruir sintetizador
+            if (api && api._synthesizer && typeof api._synthesizer.channelSetMixVolume === 'function') {
+                api._synthesizer.channelSetMixVolume(channel, gain);
+                return;
+            }
+
+            // Fallback: escribir en playbackInfo.volume y reconstruir
             if (at.score && at.score.tracks && at.score.tracks[trackIndex]) {
                 const t = at.score.tracks[trackIndex];
                 if (!t.playbackInfo) t.playbackInfo = {};
-                // Normalizar a 0-100 rango esperado por algunas implementaciones
                 t.playbackInfo.volume = Math.round((gain || 1) * 100);
                 if (api && typeof api.rebuildSynthesizer === 'function') api.rebuildSynthesizer();
                 else if (api && typeof api.reset === 'function') { api.reset(); api.rebuildSynthesizer && api.rebuildSynthesizer(); }
@@ -154,6 +168,37 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
         } catch (e) {
             console.warn('No se pudo asignar volumen por pista con los métodos conocidos:', e);
         }
+    }
+
+    /** Sincroniza los sliders del DOM con el estado actual del motor (si soporta lectura) */
+    function refreshSlidersFromPlayer() {
+        if (!at || !at.player) return;
+        const api = at.player.api || at.player;
+        const sliders = document.querySelectorAll('#track-list input[type=range]');
+        if (!sliders || sliders.length === 0) return;
+
+        sliders.forEach((s, idx) => {
+            try {
+                let channel = idx;
+                if (at.score && at.score.tracks && at.score.tracks[idx] && at.score.tracks[idx].playbackInfo) {
+                    const p = at.score.tracks[idx].playbackInfo;
+                    if (Number.isFinite(p.primaryChannel)) channel = p.primaryChannel;
+                }
+
+                let current = null;
+                if (api && typeof api.getChannelVolume === 'function') current = api.getChannelVolume(channel);
+                else if (api && typeof api.channelGetMixVolume === 'function') current = api.channelGetMixVolume(channel);
+                else if (api && api._synthesizer && typeof api._synthesizer.channelGetMixVolume === 'function') current = api._synthesizer.channelGetMixVolume(channel);
+
+                if (current != null && !isNaN(current)) {
+                    s.value = Math.round(current * 100);
+                    const label = s.nextSibling;
+                    if (label && label.tagName === 'SPAN') label.innerText = Math.round(current * 100) + '%';
+                }
+            } catch (e) {
+                // noop
+            }
+        });
     }
 
     /** Auto-ajusta volúmenes por pista usando la máxima velocidad de nota encontrada */
@@ -245,6 +290,8 @@ at.playerReady.on(() => {
         playPause.style.opacity = "1";
         playPause.innerText = "▶ PLAY";
     }
+    // refrescar sliders cuando el player está listo
+    refreshSlidersFromPlayer();
 });
 
 at.playerStateChanged.on(e => {
