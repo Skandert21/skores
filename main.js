@@ -77,13 +77,27 @@ at.scoreLoaded.on((score) => {
             // Si se estaba reproduciendo, detener para evitar duplicados/velocidades
             const wasPlaying = !!isPlaying;
             try {
+                // Intento de parada segura
                 if (wasPlaying && at && typeof at.stop === 'function') {
                     at.stop();
+                }
+
+                // Reinicio exhaustivo del estado de reproducción para evitar acumulación
+                if (at && at.player) {
+                    // Forzar playbackSpeed neutral (1)
+                    try { if (typeof at.player.playbackSpeed !== 'undefined') at.player.playbackSpeed = 1; } catch(e) { console.warn('No se pudo normalizar playbackSpeed', e); }
+
+                    // Resetear buffers de salida si la API lo expone
+                    try { if (at.player.api && at.player.api.output && typeof at.player.api.output.resetSamples === 'function') at.player.api.output.resetSamples(); } catch(e) { console.warn('No se pudo resetear output samples', e); }
+
+                    // Llamada genérica a reset si está disponible
+                    try { if (at.player.api && typeof at.player.api.reset === 'function') at.player.api.reset(); } catch(e) { console.warn('No se pudo ejecutar player.api.reset()', e); }
                 }
             } catch (e) {
                 console.warn('No se pudo detener antes de cambiar pista:', e);
             }
 
+            // Renderizar la nueva pista en un estado limpio
             at.renderTracks([track]);
             
             // Lógica de instrumentos (mantenida)
