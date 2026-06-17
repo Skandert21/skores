@@ -45,28 +45,37 @@ at.scoreLoaded.on((score) => {
 
     score.tracks.forEach((track, index) => {
         // Contenedor para agrupar botón y slider de esta pista
-// Contenedor principal con la clase para el Grid
-const trackContainer = document.createElement('div');
-trackContainer.className = "instrument-row"; 
+// 1. PRIMERO: Obtén la referencia al contenedor del DOM
+const trackListContainer = document.getElementById('track-list');
 
-// Botón de selección de pista
-const btn = document.createElement('button');
-btn.className = "btn-instrument instrument-label"; // "instrument-label" activa el Grid
-btn.innerText = (track.name || `Pista ${index + 1}`).toUpperCase();
+// 2. Comprueba que realmente existe para evitar errores
+if (trackListContainer) {
+    score.tracks.forEach((track, index) => {
+        // Ahora sí puedes usar trackListContainer
+        const trackContainer = document.createElement('div');
+        trackContainer.className = "instrument-row";
 
-// Slider individual
-const trackSlider = document.createElement('input');
-trackSlider.type = "range";
-trackSlider.className = "slider"; // Clase común para todos los sliders
-trackSlider.min = "0";
-trackSlider.max = "1";
-trackSlider.step = "0.01";
-trackSlider.value = (track.playbackInfo.volume / 16).toString();
- 
-trackContainer.appendChild(btn);
-trackContainer.appendChild(trackSlider);
-trackListContainer.appendChild(trackContainer);
+        const btn = document.createElement('button');
+        btn.className = "btn-instrument";
+        btn.innerText = (track.name || `Pista ${index + 1}`).toUpperCase();
+
+        const trackSlider = document.createElement('input');
+        trackSlider.type = "range";
+        trackSlider.className = "slider";
+        trackSlider.min = "0";
+        trackSlider.max = "1";
+        trackSlider.step = "0.01";
+        trackSlider.value = (track.playbackInfo.volume / 16).toString();
+
+        trackContainer.appendChild(btn);
+        trackContainer.appendChild(trackSlider);
         
+        // Esto ya no fallará porque trackListContainer existe
+        trackListContainer.appendChild(trackContainer);
+    });
+} else {
+    console.error("El contenedor #track-list no se encontró en el HTML");
+}
         trackSlider.oninput = (e) => {
             const vol = parseFloat(e.target.value);
             // Llamada directa a la API documentada
