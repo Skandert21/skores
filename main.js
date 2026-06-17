@@ -78,6 +78,35 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
         };
 
         trackList.appendChild(btn);
+        // --- Control de Volumen por Pista ---
+        const volWrap = document.createElement('div');
+        volWrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:8px;';
+
+        const volLabel = document.createElement('label');
+        volLabel.innerText = 'Vol';
+        volLabel.style.cssText = 'font-size:11px;color:#AAB2BE;min-width:28px;';
+
+        const volSlider = document.createElement('input');
+        volSlider.type = 'range';
+        volSlider.min = 0;
+        volSlider.max = 200;
+        volSlider.value = 100; // 100% por defecto
+        volSlider.style.cssText = 'width:120px;';
+
+        const volVal = document.createElement('span');
+        volVal.innerText = '100%';
+        volVal.style.cssText = 'font-size:11px;color:#AAB2BE;min-width:36px;text-align:right;';
+
+        volSlider.oninput = (e) => {
+            const pct = parseInt(e.target.value, 10);
+            volVal.innerText = pct + '%';
+            setTrackVolume(index, pct / 100);
+        };
+
+        volWrap.appendChild(volLabel);
+        volWrap.appendChild(volSlider);
+        volWrap.appendChild(volVal);
+        trackList.appendChild(volWrap);
     });
  
     if(score.tracks.length > 0) {
@@ -86,6 +115,97 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
     
     aplicarColoresNegros(score);
 });
+
+    // --- Mapa local de volúmenes por pista (estado)
+    const trackVolumes = {};
+
+    /**
+     * Intento robusto de ajustar el volumen por pista usando la API de AlphaTab
+     * intenta varias rutas: APIs explícitas del player, o fallback a playbackInfo + rebuildSynthesizer
+     */
+    function setTrackVolume(trackIndex, gain) {
+        trackVolumes[trackIndex] = gain;
+        if (!at || !at.player) return;
+
+        try {
+            const api = at.player.api;
+            // 1) API directa (si existe)
+            if (api && typeof api.setTrackVolume === 'function') {
+                api.setTrackVolume(trackIndex, gain);
+                return;
+            }
+
+            // 2) Mixer/buses (nombres comunes en distintas versiones)
+            if (api && api.mixer && typeof api.mixer.setVolume === 'function') {
+                api.mixer.setVolume(trackIndex, gain);
+                return;
+            }
+
+            // 3) Fallback: escribir en playbackInfo.volume (si existe) y reconstruir sintetizador
+            if (at.score && at.score.tracks && at.score.tracks[trackIndex]) {
+                const t = at.score.tracks[trackIndex];
+                if (!t.playbackInfo) t.playbackInfo = {};
+                // Normalizar a 0-100 rango esperado por algunas implementaciones
+                t.playbackInfo.volume = Math.round((gain || 1) * 100);
+                if (api && typeof api.rebuildSynthesizer === 'function') api.rebuildSynthesizer();
+                else if (api && typeof api.reset === 'function') { api.reset(); api.rebuildSynthesizer && api.rebuildSynthesizer(); }
+                return;
+            }
+        } catch (e) {
+            console.warn('No se pudo asignar volumen por pista con los métodos conocidos:', e);
+        }
+    }
+
+    /** Auto-ajusta volúmenes por pista usando la máxima velocidad de nota encontrada */
+    function autoLevelAllTracks() {
+        if (!at || !at.score) return;
+        const reference = 100; // objetivo en % relativo a velocidad
+        at.score.tracks.forEach((track, idx) => {
+            let maxV = 0;
+            if (track.staves) {
+                track.staves.forEach(staff => {
+                    staff.bars.forEach(bar => {
+                        bar.voices.forEach(voice => {
+                            voice.beats.forEach(beat => {
+                                if (beat.notes) beat.notes.forEach(n => {
+                                    const v = n.velocity || n.velocityFactor || 0;
+                                    if (v > maxV) maxV = v;
+                                });
+                            });
+                        });
+                    });
+                });
+            }
+
+            // Si no encontramos velocity, intentar buscar en eventos (fallback)
+            if (maxV === 0 && track.events) {
+                track.events.forEach(ev => { if (ev.velocity && ev.velocity > maxV) maxV = ev.velocity; });
+            }
+
+            // Si aún 0, usamos 100 como fallback
+            if (maxV === 0) maxV = 100;
+
+            const gain = Math.min(3, reference / maxV); // evitar ganancias extremas
+            setTrackVolume(idx, gain);
+            // Actualizar UI si existe
+            const sliders = document.querySelectorAll('#track-list input[type=range]');
+            if (sliders && sliders[idx]) sliders[idx].value = Math.round(gain * 100);
+        });
+    }
+
+    // Crear botón Auto-Level dentro del contenedor de instrumentos (si existe)
+    document.addEventListener('DOMContentLoaded', () => {
+        const instrumentBar = document.getElementById('track-list');
+        if (!instrumentBar) return;
+        const autoBtn = document.createElement('button');
+        autoBtn.className = 'btn-main';
+        autoBtn.innerText = 'Auto-Level';
+        autoBtn.style.cssText = 'margin-left:8px;background:#3b4653;border:1px solid #444;';
+        autoBtn.onclick = () => {
+            autoLevelAllTracks();
+        };
+        instrumentBar.insertAdjacentElement('beforebegin', autoBtn);
+    });
 
   
 function cambiarInstrumento(trackIndex, newProgram) {

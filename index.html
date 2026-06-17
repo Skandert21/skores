@@ -147,22 +147,41 @@
   const menuToggle = document.getElementById('menu-toggle');
 const sidebar = document.getElementById('sidebar');
 
-menuToggle.onclick = () => {
-    // Alternamos la clase 'closed' en lugar de 'open'
-    sidebar.classList.toggle('closed');
-    
-    // Cambiamos el icono según el estado
-    if (sidebar.classList.contains('closed')) {
+function updateMobileMode() {
+    if (window.innerWidth <= 768) {
+        sidebar.classList.add('mobile-hidden');
+        sidebar.classList.add('mobile-collapsed');
+        sidebar.classList.remove('closed', 'mobile-open');
         menuToggle.innerText = '☰';
     } else {
-        menuToggle.innerText = '✕';
+        sidebar.classList.remove('mobile-hidden', 'mobile-collapsed', 'mobile-open');
+        // keep desktop state as-is
+        menuToggle.innerText = sidebar.classList.contains('closed') ? '☰' : '✕';
     }
-};
-
-// Lógica para móviles: cerrar si se detecta pantalla pequeña al cargar
-if (window.innerWidth <= 768) {
-    sidebar.classList.add('closed');
 }
+
+menuToggle.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+        // mobile flow: toggle overlay
+        if (sidebar.classList.contains('mobile-open')) {
+            sidebar.classList.remove('mobile-open');
+            sidebar.classList.add('mobile-hidden', 'mobile-collapsed');
+            menuToggle.innerText = '☰';
+        } else {
+            sidebar.classList.remove('mobile-hidden', 'mobile-collapsed');
+            sidebar.classList.add('mobile-open');
+            menuToggle.innerText = '✕';
+        }
+    } else {
+        // desktop flow: original behavior
+        sidebar.classList.toggle('closed');
+        menuToggle.innerText = sidebar.classList.contains('closed') ? '☰' : '✕';
+    }
+});
+
+window.addEventListener('resize', updateMobileMode);
+// Inicializa según ancho actual
+document.addEventListener('DOMContentLoaded', updateMobileMode);
     </script>
 
     <script type="text/javascript"> document.addEventListener('DOMContentLoaded', () => {

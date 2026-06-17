@@ -37,13 +37,16 @@
         }
 
         header h1 {
-            font-size: 1.2rem;
-            letter-spacing: 5px;
+            font-size: clamp(1rem, 4vw, 1.2rem);
+            letter-spacing: clamp(1px, 2vw, 5px);
             text-transform: uppercase;
             font-weight: 900;
             color: var(--text);
             margin: 0;
             opacity: 0.8;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         /* --- PANEL DE CONTROL --- */
@@ -108,6 +111,7 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            margin: 0 8px; /* margen lateral para separar del resto del panel */
         }
 
         .btn-inst {
@@ -253,6 +257,7 @@
                 top: 0;
             }
             #alphaTab { width: 100%; border-radius: 0; }
+            .instrument-bar { margin: 8px 0 0 0; } /* margen vertical en móvil */
         }
         @media (max-width: 420px) {
             .sticky-footer {

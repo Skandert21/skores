@@ -149,12 +149,24 @@ body {
 }
 
 .hero h1 {
-    font-size: 3.5rem;
+    font-size: clamp(1.6rem, 5vw, 3.5rem);
     font-weight: 900;
-    line-height: 0.9;
-    letter-spacing: -2px;
+    line-height: 1.02;
+    letter-spacing: -1px;
     margin-bottom: 20px;
     color: var(--text);
+    white-space: normal; /* permitir salto de línea */
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+/* Título animado en header (ID terminal-title) */
+#terminal-title {
+    display: inline-block;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .hero p {
@@ -262,6 +274,82 @@ body {
 @media (max-width: 420px) {
     .hero h1 { font-size: 1.6rem; }
     .grid-tracks { gap: 18px; }
+}
+
+/* --- Comportamiento específico: sidebar -> header en móvil --- */
+@media (max-width: 768px) {
+    /* Hacer que el toggle sea parte del header en lugar de fijo */
+    .menu-toggle {
+        position: relative;
+        top: auto;
+        right: auto;
+        left: auto;
+        box-shadow: none;
+        margin-right: 10px;
+    }
+
+    /* Sidebar colapsado como header */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 60px;
+        width: 100%;
+        min-width: 0;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+        z-index: 1100;
+        overflow: visible;
+    }
+
+    .sidebar .sidebar-header {
+        padding: 0;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .sidebar .logo { margin: 0 8px; font-size: 1.1rem; }
+
+    /* Ocultar el contenido de navegación en la vista header */
+    .sidebar .nav-section,
+    .sidebar #track-list,
+    .sub-menu {
+        display: none;
+    }
+
+    /* Cuando se abre en móvil, mostrar como overlay lateral */
+    .sidebar.mobile-open {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 85%;
+        max-width: 420px;
+        border-right: 1px solid var(--border);
+        border-bottom: none;
+        padding: 30px 16px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        background: var(--sidebar-bg);
+        box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+        z-index: 1200;
+        transform: translateX(0);
+        transition: transform 0.25s ease;
+    }
+
+    /* Estado inicial para animar entrada (oculto fuera de pantalla) */
+    .sidebar.mobile-hidden {
+        transform: translateX(-110%);
+    }
+
+    /* Ajustes visuales menores */
+    .menu-toggle:hover { transform: none; }
 }
 
 .measure-box {
