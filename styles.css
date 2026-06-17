@@ -23,7 +23,7 @@ body {
 }
 
 /* --- SIDEBAR: CONTENEDOR PRINCIPAL --- */
- 
+/* --- 1. SIDEBAR: Contenedor rígido --- */
 .sidebar {
     width: 300px;
     min-width: 300px;
@@ -32,7 +32,7 @@ body {
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    overflow: hidden; 
+    overflow: hidden; /* Evita que el sidebar genere scroll propio */
     z-index: 1000;
     position: relative;
 }
@@ -43,24 +43,36 @@ body {
     flex-shrink: 0; 
 }
 
-/* --- REGLA ÚNICA PARA TRACK-LIST --- */
+/* --- 2. TRACK-LIST: El contenedor que reparte espacio --- */
 #track-list {
-    flex: 1 1 auto;             /* Flexibilidad completa */
-    overflow-y: auto;           /* Habilita el scroll */
+    flex: 1;
+    overflow-y: auto; /* Permite scroll global si la suma de carpetas excede la pantalla */
     padding: 12px 0 24px 0;
-    -webkit-overflow-scrolling: touch; 
 }
 
-/* Estilos para la barra de scroll */
-#track-list::-webkit-scrollbar {
+/* --- 3. SUB-MENU: El scroll interno de cada desplegable --- */
+.sub-menu {
+    max-height: 0;
+    overflow-y: hidden; /* Oculto por defecto mientras está cerrado */
+    transition: max-height 0.3s ease-out;
+}
+
+.sub-menu.open {
+    /* Aquí limitamos la altura del desplegable */
+    /* 50vh asegura que siempre deje espacio para otras carpetas */
+    max-height: 50vh; 
+    overflow-y: auto; /* Se activa el scroll SOLO cuando el contenido supera esa altura */
+}
+
+/* Estilos para la barra de scroll (se aplicará a cualquier elemento con overflow-y: auto) */
+::-webkit-scrollbar {
     width: 6px;
 }
 
-#track-list::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
     background-color: #333;
     border-radius: 3px;
 }
- 
 /* Estado Cerrado: Se oculta desplazando su propio ancho */
 .sidebar.closed {
     margin-left: -300px;
