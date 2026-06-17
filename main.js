@@ -344,8 +344,40 @@ if (typeof document !== 'undefined') {
 // Inicializar cuando el DOM esté listo (solo si existe el contenedor `#alphaTab`)
 document.addEventListener('DOMContentLoaded', () => {
     if (document.querySelector('#alphaTab')) {
-        // `init` fue definida al principio; llamarla ahora que el DOM está listo
+        // Llamada segura a `init` (si no existe, definimos un handler mínimo abajo)
         try { init(); } catch (e) { console.error('Error al iniciar AlphaTab:', e); }
     }
 });
+
+// Función de inicialización mínima: vincula handlers que pudieron no encontrarse
+// durante la carga si el DOM aún no estaba listo. Es deliberadamente conservadora.
+function init() {
+    try {
+        // Vincular botón Play/Pause si no se vinculó antes
+        if (!playPause) playPause = document.getElementById('play-pause-btn');
+        if (playPause && !playPause.dataset?.bound) {
+            playPause.onclick = async e => {
+                e.preventDefault();
+                try {
+                    if (at?.player?.api?.audioContext?.state === 'suspended') {
+                        await at.player.api.audioContext.resume();
+                    }
+                } catch (err) { console.warn('No se pudo reanudar AudioContext automáticamente:', err); }
+                if (typeof at?.playPause === 'function') at.playPause();
+            };
+            playPause.dataset.bound = '1';
+            window.addEventListener('keydown', e => {
+                if (e.code === 'Space' || e.key === ' ') {
+                    e.preventDefault();
+                    playPause.click();
+                }
+            });
+        }
+
+        // Ocultar loader si ya está listo
+        if (loaderContainer) loaderContainer.style.display = 'none';
+    } catch (err) {
+        console.error('init() fallo:', err);
+    }
+}
  
