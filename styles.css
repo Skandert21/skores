@@ -22,46 +22,45 @@ body {
     overflow: auto; /* permitir scroll en dispositivos móviles */
 }
 
-/* --- SIDEBAR --- */
+/* --- SIDEBAR: CONTENEDOR PRINCIPAL --- */
+ 
 .sidebar {
     width: 300px;
     min-width: 300px;
-    height: 100vh; /* Ocupa toda la altura */
+    height: 100vh;
     background: var(--sidebar-bg);
     border-right: 1px solid var(--border);
     display: flex;
-    flex-direction: column; /* Apila el header arriba y la lista abajo */
-    overflow: hidden;       /* La sidebar no debe tener scroll propio, sino su hijo */
+    flex-direction: column;
+    overflow: hidden; 
     z-index: 1000;
+    position: relative;
 }
 
-/* El header tiene altura fija, no debe moverse */
 .sidebar-header {
     padding: 30px 20px;
     border-bottom: 1px solid var(--border);
-    flex-shrink: 0; /* Impide que el header se encoja */
+    flex-shrink: 0; 
 }
 
-.sidebar::-webkit-scrollbar {
+/* --- REGLA ÚNICA PARA TRACK-LIST --- */
+#track-list {
+    flex: 1 1 auto;             /* Flexibilidad completa */
+    overflow-y: auto;           /* Habilita el scroll */
+    padding: 12px 0 24px 0;
+    -webkit-overflow-scrolling: touch; 
+}
+
+/* Estilos para la barra de scroll */
+#track-list::-webkit-scrollbar {
     width: 6px;
 }
 
-.sidebar::-webkit-scrollbar-thumb {
+#track-list::-webkit-scrollbar-thumb {
     background-color: #333;
     border-radius: 3px;
 }
-/* Ensure track-list inside sidebar can scroll and show all items */
-.sidebar #track-list {
-    flex: 1 1 auto;
-    overflow-y: auto;
-    padding: 12px 0 24px 0;
-}
-/* El track-list es el que debe tener el scroll */
-#track-list {
-    flex: 1;                /* Ocupa todo el espacio restante */
-    overflow-y: auto;       /* ¡AQUÍ ESTÁ EL SCROLL! */
-    padding: 12px 0 24px 0;
-}
+ 
 /* Estado Cerrado: Se oculta desplazando su propio ancho */
 .sidebar.closed {
     margin-left: -300px;
