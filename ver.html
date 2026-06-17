@@ -79,7 +79,7 @@
             justify-content: space-between;
             border: 1px solid var(--border);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            margin: 20px 0;
+            margin: 20px auto; /* center with horizontal margins */
             position: sticky;
             top: 10px;
             z-index: 100;
@@ -268,10 +268,12 @@
         @media (max-width: 768px) {
             .master-panel {
                 flex-direction: column;
-                width: 100%;
-                border-radius: 0;
-                top: 10px; /* mantener pequeño margen superior en móvil */
-                margin: 10px 8px; /* margen visible incluso en pantallas pequeñas */
+                width: calc(100% - 24px);
+                border-radius: 8px;
+                top: 12px; /* mantener pequeño margen superior en móvil */
+                margin: 12px auto !important; /* forzar margen horizontal en móviles */
+                padding-left: 12px;
+                padding-right: 12px;
             }
             #alphaTab { width: 100%; border-radius: 0; }
             .instrument-bar { margin: 8px 0 0 0; } /* margen vertical en móvil */

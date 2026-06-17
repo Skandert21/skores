@@ -26,6 +26,7 @@ const atSettings = {
 
 // --- 2. VARIABLES DE ESTADO ---
 let currentTrackIndex = 0;
+let isPlaying = false; // estado de reproducción actual (sincronizado con playerStateChanged)
 const at = new alphaTab.AlphaTabApi(el, atSettings);
 
 // --- 3. LISTENER DEL SLIDER ---
@@ -71,8 +72,18 @@ at.scoreLoaded.on((score) => {
             at.changeTrackVolume([track], vol);
         };
 
-        btn.onclick = () => {
+        btn.onclick = async () => {
             currentTrackIndex = index;
+            // Si se estaba reproduciendo, detener para evitar duplicados/velocidades
+            const wasPlaying = !!isPlaying;
+            try {
+                if (wasPlaying && at && typeof at.stop === 'function') {
+                    at.stop();
+                }
+            } catch (e) {
+                console.warn('No se pudo detener antes de cambiar pista:', e);
+            }
+
             at.renderTracks([track]);
             
             // Lógica de instrumentos (mantenida)
@@ -85,6 +96,15 @@ at.scoreLoaded.on((score) => {
             if (at.player && typeof at.player.rebuildSynthesizer === 'function') {
                 at.player.rebuildSynthesizer();
             }
+
+            // Si antes estaba sonando, intentar reanudar reproducción limpia
+            try {
+                if (wasPlaying) {
+                    if (at && typeof at.play === 'function') at.play();
+                    else if (at && typeof at.playPause === 'function') at.playPause();
+                    else if (at.player && typeof at.player.play === 'function') at.player.play();
+                }
+            } catch (e) { console.warn('No se pudo reanudar automáticamente:', e); }
 
             document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#2D333F");
             btn.style.background = "#E63946";
@@ -174,8 +194,10 @@ at.playerReady.on(() => {
 });
 
 at.playerStateChanged.on(e => {
+    // e.state === 1 => playing
+    isPlaying = (e.state === 1);
     if (playPause) {
-        playPause.innerHTML = (e.state === 1) ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+        playPause.innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
     }
 });
  
