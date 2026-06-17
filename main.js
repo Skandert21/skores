@@ -43,39 +43,93 @@ at.scoreLoaded.on((score) => {
     trackList.innerHTML = '';
 
     score.tracks.forEach((track, index) => {
+        // Contenedor para agrupar botón y slider de esta pista
+        const trackContainer = document.createElement('div');
+        trackContainer.style.display = "flex";
+        trackContainer.style.alignItems = "center";
+        trackContainer.style.marginBottom = "5px";
+
+        // Botón de selección de pista
         const btn = document.createElement('button');
         btn.className = "btn-instrument"; 
         btn.innerText = (track.name || `Pista ${index + 1}`).toUpperCase();
-        btn.style.cssText = "margin-right: 8px; padding: 8px 12px; background: #2D333F; color: #FFFFFF; border: 1px solid #444; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s;";
+        btn.style.cssText = "margin-right: 10px; padding: 6px 10px; background: #2D333F; color: #FFFFFF; border: 1px solid #444; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold;";
+
+        // Slider individual para el volumen de esta pista (Documentación: changeTrackVolume)
+        const trackSlider = document.createElement('input');
+        trackSlider.type = "range";
+        trackSlider.min = "0";
+        trackSlider.max = "1";
+        trackSlider.step = "0.01";
+        // Asumimos que playbackInfo.volume está en 0-16, convertimos a 0-1
+        trackSlider.value = (track.playbackInfo.volume / 16).toString();
+        trackSlider.style.width = "80px";
+        
+        trackSlider.oninput = (e) => {
+            const vol = parseFloat(e.target.value);
+            // Llamada directa a la API documentada
+            at.changeTrackVolume([track], vol);
+        };
 
         btn.onclick = () => {
             currentTrackIndex = index;
             at.renderTracks([track]);
             
-            // Actualizar slider al volumen de esta pista
-            if (volumenSlider) {
-                volumenSlider.value = Math.round((track.playbackInfo.volume / 16) * 100);
-            }
-
-            // Lógica de instrumentos
+            // Lógica de instrumentos (mantenida)
             const name = btn.innerText.toLowerCase();
             if (name.includes("bass") || name.includes("bajo")) track.playbackInfo.program = 34;
             else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) track.playbackInfo.program = 29;
             else track.playbackInfo.program = 25;
 
-            if (at.player) at.player.rebuildSynthesizer();
+            // Nota: Si rebuildSynthesizer falla en tu versión, comenta la siguiente línea
+            if (at.player && typeof at.player.rebuildSynthesizer === 'function') {
+                at.player.rebuildSynthesizer();
+            }
+
             document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#2D333F");
             btn.style.background = "#E63946";
         };
-        trackList.appendChild(btn);
+
+        trackContainer.appendChild(btn);
+        trackContainer.appendChild(trackSlider);
+        trackList.appendChild(trackContainer);
     });
 
     if(score.tracks.length > 0) {
         at.renderTracks([score.tracks[0]]);
-        if (volumenSlider) volumenSlider.value = Math.round((score.tracks[0].playbackInfo.volume / 16) * 100);
     }
     aplicarColoresNegros(score);
 });
+// Bind master slider safely: supports new `master-volume-slider` (0-100) and legacy `master-volume` (0-1)
+const masterSlider = document.getElementById('master-volume-slider') || document.getElementById('master-volume');
+if (masterSlider) {
+    masterSlider.addEventListener('input', (e) => {
+        const raw = e.target.value;
+        // If this is the visible slider in ver.html it provides 0-100 and calls setMasterVolume
+        if (masterSlider.id === 'master-volume-slider') {
+            if (typeof setMasterVolume === 'function') setMasterVolume(raw);
+        } else {
+            const vol = parseFloat(raw);
+            if (at && typeof at.masterVolume !== 'undefined') at.masterVolume = vol;
+        }
+    });
+}
+
+// A. Control de Volumen Maestro (Global)
+function setMasterVolume(porcentaje) {
+    // La documentación dice que acepta 0 a 1
+    const vol = parseFloat(porcentaje) / 100;
+    at.masterVolume = vol; 
+    console.log(`Volumen maestro ajustado a: ${vol}`);
+}
+
+// B. Control de Volumen por Pista (Track específico)
+function setTrackVolume(track, porcentaje) {
+    // La documentación requiere un array de pistas y el valor 0 a 1
+    const vol = parseFloat(porcentaje) / 100;
+    at.changeTrackVolume([track], vol);
+    console.log(`Volumen de pista ${track.name} ajustado a: ${vol}`);
+}
 
 function cambiarVolumen(trackIndex, valorPorcentaje) {
     if (!at || !at.score) return;
@@ -230,33 +284,44 @@ async function buildKey(trackId){
 }
 
 // --- 5. INTERACCIONES DEL DOM ---
-playPause.onclick = async e => {
-    e.preventDefault();
-    if (at.player?.api?.audioContext?.state === 'suspended') {
-        await at.player.api.audioContext.resume();
+if (typeof document !== 'undefined') {
+    // Play / Pause
+    playPause = document.getElementById('play-pause-btn');
+    if (playPause) {
+        playPause.onclick = async e => {
+            e.preventDefault();
+            try {
+                if (at?.player?.api?.audioContext?.state === 'suspended') {
+                    await at.player.api.audioContext.resume();
+                }
+            } catch (err) { console.warn('No se pudo reanudar AudioContext automáticamente:', err); }
+            if (typeof at?.playPause === 'function') at.playPause();
+        };
+
+        window.addEventListener('keydown', e => {
+            if (e.code === 'Space' || e.key === ' ') {
+                e.preventDefault();
+                playPause.click();
+            }
+        });
     }
-    at.playPause();
-};
 
-document.getElementById('stop-btn').onclick = () => {
-    if (at.player) at.stop(); 
-};
+    // Stop
+    const stopBtn = document.getElementById('stop-btn');
+    if (stopBtn) stopBtn.onclick = () => { if (at?.player) at.stop(); };
 
-const lockBtnFooter = document.getElementById('lock-scroll-footer');
-let isScrollLocked = false;
-lockBtnFooter.onclick = () => {
-    isScrollLocked = !isScrollLocked;
-    at.settings.display.autoScroll = isScrollLocked ? 0 : 1;
-    at.updateSettings();
-    lockBtnFooter.innerText = isScrollLocked ? '🔒\uFE0E' : '🔓\uFE0E';
-};
-
-window.addEventListener('keydown', e => {
-    if (e.code === 'Space' || e.key === ' ') {
-        e.preventDefault();
-        playPause.click(); 
+    // Lock scroll footer
+    const lockBtnFooter = document.getElementById('lock-scroll-footer');
+    let isScrollLocked = false;
+    if (lockBtnFooter) {
+        lockBtnFooter.onclick = () => {
+            isScrollLocked = !isScrollLocked;
+            if (at && at.settings) at.settings.display.autoScroll = isScrollLocked ? 0 : 1;
+            if (at && typeof at.updateSettings === 'function') at.updateSettings();
+            lockBtnFooter.innerText = isScrollLocked ? '🔒\uFE0E' : '🔓\uFE0E';
+        };
     }
-});
+}
 
 // --- 6. BOOTSTRAP (PUNTO DE ENTRADA PRINCIPAL) ---
  
@@ -276,4 +341,11 @@ window.addEventListener('keydown', e => {
     }
 })();
  
+// Inicializar cuando el DOM esté listo (solo si existe el contenedor `#alphaTab`)
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.querySelector('#alphaTab')) {
+        // `init` fue definida al principio; llamarla ahora que el DOM está listo
+        try { init(); } catch (e) { console.error('Error al iniciar AlphaTab:', e); }
+    }
+});
  

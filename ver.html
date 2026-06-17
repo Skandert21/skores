@@ -304,10 +304,11 @@
             <button class="btn-main" id="stop-btn">⏹ STOP</button>
         </div>
 
-        <div class="control-group" style="display: flex; align-items: center; gap: 8px;">
-            <label for="volumen-slider" style="color: #fff; font-size: 11px; font-weight: bold; letter-spacing: 1px;">VOLUMEN</label>
-            <input type="range" id="volumen-slider" min="0" max="100" value="100" style="cursor: pointer;">
-        </div>
+    <div class="control-group">
+    <label>Volumen Maestro:</label>
+    <input type="range" id="master-volume-slider" min="0" max="100" value="100" 
+           oninput="setMasterVolume(this.value)">
+</div>
         <div class="instrument-bar" id="track-list">
         </div>
     </div>
