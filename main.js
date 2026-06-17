@@ -1,6 +1,6 @@
 // DOM Elements
 const el = document.querySelector('#alphaTab');
-const playPause = document.querySelector('#play-pause-btn');
+let playPause = document.querySelector('#play-pause-btn');
 const loaderContainer = document.getElementById('loader-container');
 const loadingText = document.getElementById('loading-text');
 const volumenSlider = document.getElementById('volumen-slider');
