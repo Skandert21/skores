@@ -1,39 +1,13 @@
-// DOM Elements (will be queried after DOM ready)
-let el;
-let playPause;
-let loaderContainer;
-let loadingText;
-
-// Global AlphaTab instance placeholder
-let at;
-
-// Ensure alphaTab script is loaded before initializing
-async function waitForAlphaTab(timeout = 5000) {
-    const start = Date.now();
-    while (typeof window.alphaTab === 'undefined') {
-        if (Date.now() - start > timeout) throw new Error('alphaTab not available after timeout');
-        await new Promise(r => setTimeout(r, 100));
-    }
-}
-
-async function init() {
-    el = document.querySelector('#alphaTab');
-    playPause = document.querySelector('#play-pause-btn');
-    loaderContainer = document.getElementById('loader-container');
-    loadingText = document.getElementById('loading-text');
-
-    try {
-        await waitForAlphaTab(8000);
-    } catch (e) {
-        console.error('alphaTab library failed to load:', e);
-        if (loadingText) loadingText.innerText = 'Error: AlphaTab no disponible.';
-        return;
-    }
+// DOM Elements
+const el = document.querySelector('#alphaTab');
+const playPause = document.querySelector('#play-pause-btn');
+const loaderContainer = document.getElementById('loader-container');
+const loadingText = document.getElementById('loading-text');
 
 // --- 1. CONFIGURACIÓN DE MOTOR (VISUAL Y AUDIO) ---
 const atSettings = {
     player: {
-        enablePlayer: true, // enable player so playback API is available (resume handled on user gesture)
+        enablePlayer: true,
         enableCursor: true,
         enableWorker: true,
         workerScript: './alphaTab.min.js',  
@@ -64,18 +38,33 @@ const atSettings = {
     }
 };
 
-    // Instancia global del motor (creada después de asegurar alphaTab)
-    try {
-        at = new alphaTab.AlphaTabApi(el, atSettings);
-    } catch (err) {
-        console.error('No se pudo crear AlphaTabApi:', err);
-        if (loadingText) loadingText.innerText = 'Error: No se pudo inicializar el motor.';
-        return;
-    }
+const volumenSlider = document.getElementById('volumen-slider');
 
-    at.scoreLoaded.on((score) => {
+if (volumenSlider) {
+    volumenSlider.addEventListener('input', (e) => {
+        // Obtenemos el valor del slider (0 a 100)
+        const nuevoVolumen = parseInt(e.target.value);
+        
+        // Aplicamos el volumen a la pista actual.
+        // Asumiendo que at.score.tracks[0] es la pista renderizada por defecto,
+        // o puedes guardar el índice de la pista seleccionada en una variable global.
+        
+        // Ejemplo para aplicarlo a la primera pista:
+        cambiarVolumen(0, nuevoVolumen); 
+    });
+}
+
+// Instancia global del motor
+const at = new alphaTab.AlphaTabApi(el, atSettings);
+
+ 
+ at.scoreLoaded.on((score) => {
     const trackList = document.getElementById('track-list');
     if (!trackList) return;
+ 
+if (volumenSlider) {
+    volumenSlider.value = Math.round((track.playbackInfo.volume / 16) * 100);
+}
 
     trackList.innerHTML = ''; // Limpieza total de renderizados previos
 
@@ -109,35 +98,6 @@ const atSettings = {
         };
 
         trackList.appendChild(btn);
-        // --- Control de Volumen por Pista ---
-        const volWrap = document.createElement('div');
-        volWrap.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:8px;';
-
-        const volLabel = document.createElement('label');
-        volLabel.innerText = 'Vol';
-        volLabel.style.cssText = 'font-size:11px;color:#AAB2BE;min-width:28px;';
-
-        const volSlider = document.createElement('input');
-        volSlider.type = 'range';
-        volSlider.min = 0;
-        volSlider.max = 200;
-        volSlider.value = 100; // 100% por defecto
-        volSlider.style.cssText = 'width:120px;';
-
-        const volVal = document.createElement('span');
-        volVal.innerText = '100%';
-        volVal.style.cssText = 'font-size:11px;color:#AAB2BE;min-width:36px;text-align:right;';
-
-        volSlider.oninput = (e) => {
-            const pct = parseInt(e.target.value, 10);
-            volVal.innerText = pct + '%';
-            setTrackVolume(index, pct / 100);
-        };
-
-        volWrap.appendChild(volLabel);
-        volWrap.appendChild(volSlider);
-        volWrap.appendChild(volVal);
-        trackList.appendChild(volWrap);
     });
  
     if(score.tracks.length > 0) {
@@ -145,178 +105,7 @@ const atSettings = {
     }
     
     aplicarColoresNegros(score);
-    // Sincronizar sliders con el motor si está disponible
-    refreshSlidersFromPlayer();
 });
-
-    // Registrar eventos del player (después de crear `at`)
-    if (at.playerReady && typeof at.playerReady.on === 'function') {
-        at.playerReady.on(() => {
-            console.log("Audio listo. Verificando estado del sintetizador...");
-
-            if (at.player && at.player.api) {
-                try {
-                    if (typeof at.player.api.reset === 'function') at.player.api.reset();
-                    at.player.api.rebuildSynthesizer();
-                    at.score.tracks.forEach((t, i) => {
-                        console.log(`Verificación Final - Track ${i}: Program ${t.playbackInfo.program}`);
-                    });
-                } catch(e) {
-                    console.error("Error en parches finales:", e);
-                }
-            }
-
-            if (loaderContainer) loaderContainer.style.display = 'none';
-            if (playPause) {
-                playPause.style.opacity = "1";
-                playPause.innerText = "▶ PLAY";
-            }
-            refreshSlidersFromPlayer();
-        });
-    }
-
-    if (at.playerStateChanged && typeof at.playerStateChanged.on === 'function') {
-        at.playerStateChanged.on(e => {
-            if (playPause) {
-                playPause.innerText = (e.state === 1) ? "⏸ PAUSE" : "▶ PLAY";
-            }
-        });
-    }
-
-}
-
-    // --- Mapa local de volúmenes por pista (estado)
-    const trackVolumes = {};
-    /**
-     * Ajusta el volumen por pista usando las APIs internas de AlphaTab cuando están disponibles.
-     * Se intenta: api.setChannelVolume / api.setChannelMixVolume / api._synthesizer.channelSetMixVolume
-     * Si no hay API disponible, hace fallback a `playbackInfo.volume` y rebuildea el sintetizador.
-     */
-    function setTrackVolume(trackIndex, gain) {
-        trackVolumes[trackIndex] = gain;
-        if (!at || !at.player) return;
-
-        const api = at.player.api || at.player;
-        // Determinar canal MIDI asociado a la pista (si existe)
-        let channel = trackIndex;
-        try {
-            if (at.score && at.score.tracks && at.score.tracks[trackIndex] && at.score.tracks[trackIndex].playbackInfo) {
-                const p = at.score.tracks[trackIndex].playbackInfo;
-                if (Number.isFinite(p.primaryChannel)) channel = p.primaryChannel;
-                else if (Number.isFinite(p.secondaryChannel)) channel = p.secondaryChannel;
-            }
-
-            // Rutas posibles según versiones internas
-            if (api && typeof api.setChannelVolume === 'function') {
-                api.setChannelVolume(channel, gain);
-                return;
-            }
-
-            if (api && typeof api.setChannelMixVolume === 'function') {
-                api.setChannelMixVolume(channel, gain);
-                return;
-            }
-
-            if (api && api._synthesizer && typeof api._synthesizer.channelSetMixVolume === 'function') {
-                api._synthesizer.channelSetMixVolume(channel, gain);
-                return;
-            }
-
-            // Fallback: escribir en playbackInfo.volume y reconstruir
-            if (at.score && at.score.tracks && at.score.tracks[trackIndex]) {
-                const t = at.score.tracks[trackIndex];
-                if (!t.playbackInfo) t.playbackInfo = {};
-                t.playbackInfo.volume = Math.round((gain || 1) * 100);
-                if (api && typeof api.rebuildSynthesizer === 'function') api.rebuildSynthesizer();
-                else if (api && typeof api.reset === 'function') { api.reset(); api.rebuildSynthesizer && api.rebuildSynthesizer(); }
-                return;
-            }
-        } catch (e) {
-            console.warn('No se pudo asignar volumen por pista con los métodos conocidos:', e);
-        }
-    }
-
-    /** Sincroniza los sliders del DOM con el estado actual del motor (si soporta lectura) */
-    function refreshSlidersFromPlayer() {
-        if (!at || !at.player) return;
-        const api = at.player.api || at.player;
-        const sliders = document.querySelectorAll('#track-list input[type=range]');
-        if (!sliders || sliders.length === 0) return;
-
-        sliders.forEach((s, idx) => {
-            try {
-                let channel = idx;
-                if (at.score && at.score.tracks && at.score.tracks[idx] && at.score.tracks[idx].playbackInfo) {
-                    const p = at.score.tracks[idx].playbackInfo;
-                    if (Number.isFinite(p.primaryChannel)) channel = p.primaryChannel;
-                }
-
-                let current = null;
-                if (api && typeof api.getChannelVolume === 'function') current = api.getChannelVolume(channel);
-                else if (api && typeof api.channelGetMixVolume === 'function') current = api.channelGetMixVolume(channel);
-                else if (api && api._synthesizer && typeof api._synthesizer.channelGetMixVolume === 'function') current = api._synthesizer.channelGetMixVolume(channel);
-
-                if (current != null && !isNaN(current)) {
-                    s.value = Math.round(current * 100);
-                    const label = s.nextSibling;
-                    if (label && label.tagName === 'SPAN') label.innerText = Math.round(current * 100) + '%';
-                }
-            } catch (e) {
-                // noop
-            }
-        });
-    }
-
-    /** Auto-ajusta volúmenes por pista usando la máxima velocidad de nota encontrada */
-    function autoLevelAllTracks() {
-        if (!at || !at.score) return;
-        const reference = 100; // objetivo en % relativo a velocidad
-        at.score.tracks.forEach((track, idx) => {
-            let maxV = 0;
-            if (track.staves) {
-                track.staves.forEach(staff => {
-                    staff.bars.forEach(bar => {
-                        bar.voices.forEach(voice => {
-                            voice.beats.forEach(beat => {
-                                if (beat.notes) beat.notes.forEach(n => {
-                                    const v = n.velocity || n.velocityFactor || 0;
-                                    if (v > maxV) maxV = v;
-                                });
-                            });
-                        });
-                    });
-                });
-            }
-
-            // Si no encontramos velocity, intentar buscar en eventos (fallback)
-            if (maxV === 0 && track.events) {
-                track.events.forEach(ev => { if (ev.velocity && ev.velocity > maxV) maxV = ev.velocity; });
-            }
-
-            // Si aún 0, usamos 100 como fallback
-            if (maxV === 0) maxV = 100;
-
-            const gain = Math.min(3, reference / maxV); // evitar ganancias extremas
-            setTrackVolume(idx, gain);
-            // Actualizar UI si existe
-            const sliders = document.querySelectorAll('#track-list input[type=range]');
-            if (sliders && sliders[idx]) sliders[idx].value = Math.round(gain * 100);
-        });
-    }
-
-    // Crear botón Auto-Level dentro del contenedor de instrumentos (si existe)
-    document.addEventListener('DOMContentLoaded', () => {
-        const instrumentBar = document.getElementById('track-list');
-        if (!instrumentBar) return;
-        const autoBtn = document.createElement('button');
-        autoBtn.className = 'btn-main';
-        autoBtn.innerText = 'Auto-Level';
-        autoBtn.style.cssText = 'margin-left:8px;background:#3b4653;border:1px solid #444;';
-        autoBtn.onclick = () => {
-            autoLevelAllTracks();
-        };
-        instrumentBar.insertAdjacentElement('beforebegin', autoBtn);
-    });
 
   
 function cambiarInstrumento(trackIndex, newProgram) {
@@ -329,7 +118,70 @@ function cambiarInstrumento(trackIndex, newProgram) {
         console.log(`Track ${trackIndex} actualizado a programa ${newProgram}`);
     }
 }
- 
+
+// Función para cambiar el volumen sin romper el motor de audio
+function cambiarVolumen(trackIndex, valorPorcentaje) {
+    if (!at.score) return;
+    
+    const track = at.score.tracks[trackIndex];
+    if (!track) return;
+
+    // AlphaTab maneja el volumen en una escala de 0 a 16.
+    // Convertimos el porcentaje (0 a 100) a la escala de AlphaTab:
+    const volumenCalculado = Math.round((valorPorcentaje / 100) * 16);
+    
+    // Asignamos asegurando que no se pase de los límites
+    track.playbackInfo.volume = Math.max(0, Math.min(16, volumenCalculado));
+    
+    if (at.player && at.player.api) {
+        try {
+            // Intentamos la API limpia primero (si tu versión de AlphaTab la soporta)
+            if (typeof at.changeTrackVolume === 'function') {
+                at.changeTrackVolume(track);
+            } else {
+                // Fallback seguro: el mismo que usas para los instrumentos y que sabemos que funciona
+                at.player.api.rebuildSynthesizer();
+            }
+            console.log(`Pista ${trackIndex}: Volumen ajustado a ${track.playbackInfo.volume}/16`);
+        } catch (e) {
+            console.error("Error al actualizar volumen:", e);
+        }
+    }
+}
+
+at.playerReady.on(() => {
+    console.log("Audio listo. Verificando estado del sintetizador...");
+
+    if (at.player && at.player.api) {
+        try {
+            // 1. Resetear el mixer interno
+            if (typeof at.player.api.reset === 'function') at.player.api.reset();
+            
+            // 2. Forzar la reconstrucción con los nuevos programas (29, 34, etc.)
+            at.player.api.rebuildSynthesizer();
+            
+            // 3. LOG DE VERIFICACIÓN: Ver qué cargó el motor realmente
+            at.score.tracks.forEach((t, i) => {
+                console.log(`Verificación Final - Track ${i}: Program ${t.playbackInfo.program}`);
+            });
+
+        } catch(e) {
+            console.error("Error en parches finales:", e);
+        }
+    }
+
+    if (loaderContainer) loaderContainer.style.display = 'none';
+    if (playPause) {
+        playPause.style.opacity = "1";
+        playPause.innerText = "▶ PLAY";
+    }
+});
+
+at.playerStateChanged.on(e => {
+    if (playPause) {
+        playPause.innerText = (e.state === 1) ? "⏸ PAUSE" : "▶ PLAY";
+    }
+});
  
 function decryptXOR(input, keyBytes) {
     const binary = atob(input);
@@ -436,43 +288,33 @@ async function buildKey(trackId){
 }
 
 // --- 5. INTERACCIONES DEL DOM ---
-if (playPause) {
-    playPause.onclick = async e => {
-        e.preventDefault();
-        try {
-            if (at.player?.api?.audioContext?.state === 'suspended') {
-                await at.player.api.audioContext.resume();
-            }
-        } catch (err) {
-            console.warn('No se pudo reanudar AudioContext automáticamente:', err);
-        }
-        if (typeof at.playPause === 'function') at.playPause();
-    };
+playPause.onclick = async e => {
+    e.preventDefault();
+    if (at.player?.api?.audioContext?.state === 'suspended') {
+        await at.player.api.audioContext.resume();
+    }
+    at.playPause();
+};
 
-    // Key binding solo si existe el botón
-    window.addEventListener('keydown', e => {
-        if (e.code === 'Space' || e.key === ' ') {
-            e.preventDefault();
-            playPause.click(); 
-        }
-    });
-}
-
-const stopBtn = document.getElementById('stop-btn');
-if (stopBtn) {
-    stopBtn.onclick = () => { if (at.player) at.stop(); };
-}
+document.getElementById('stop-btn').onclick = () => {
+    if (at.player) at.stop(); 
+};
 
 const lockBtnFooter = document.getElementById('lock-scroll-footer');
 let isScrollLocked = false;
-if (lockBtnFooter) {
-    lockBtnFooter.onclick = () => {
-        isScrollLocked = !isScrollLocked;
-        at.settings.display.autoScroll = isScrollLocked ? 0 : 1;
-        at.updateSettings();
-        lockBtnFooter.innerText = isScrollLocked ? '🔒\uFE0E' : '🔓\uFE0E';
-    };
-}
+lockBtnFooter.onclick = () => {
+    isScrollLocked = !isScrollLocked;
+    at.settings.display.autoScroll = isScrollLocked ? 0 : 1;
+    at.updateSettings();
+    lockBtnFooter.innerText = isScrollLocked ? '🔒\uFE0E' : '🔓\uFE0E';
+};
+
+window.addEventListener('keydown', e => {
+    if (e.code === 'Space' || e.key === ' ') {
+        e.preventDefault();
+        playPause.click(); 
+    }
+});
 
 // --- 6. BOOTSTRAP (PUNTO DE ENTRADA PRINCIPAL) ---
  
@@ -491,9 +333,5 @@ if (lockBtnFooter) {
         }
     }
 })();
-// Inicializar cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    init();
-});
  
  
