@@ -3,8 +3,9 @@ const el = document.querySelector('#alphaTab');
 const playPause = document.querySelector('#play-pause-btn');
 const loaderContainer = document.getElementById('loader-container');
 const loadingText = document.getElementById('loading-text');
+const volumenSlider = document.getElementById('volumen-slider');
 
-// --- 1. CONFIGURACIÓN DE MOTOR (VISUAL Y AUDIO) ---
+// --- 1. CONFIGURACIÓN DE MOTOR ---
 const atSettings = {
     player: {
         enablePlayer: true,
@@ -17,29 +18,17 @@ const atSettings = {
         engine: 'svg',
         layoutMode: 'page',
         autoScroll: 1,
-        resources: {
-            staffLineColor: '#222',
-            barLineColor: '#444',
-            fretNumberColor: '#111',
-            standardNotationNoteHeadColor: '#111',
-            tablatureRestColor: 'transparent'
-        },
-        elements: {
-            scoreTitle: false,
-            scoreSubTitle: false,
-            scoreWords: false,
-            scoreMusic: true  
-        }
+        resources: { staffLineColor: '#222', barLineColor: '#444', fretNumberColor: '#111', standardNotationNoteHeadColor: '#111', tablatureRestColor: 'transparent' },
+        elements: { scoreTitle: false, scoreSubTitle: false, scoreWords: false, scoreMusic: true }
     },
-    notation: {
-        staveTypes: [0, 1],
-        rhythmMode: 'Hidden',
-        extendBendArrowsOnTiedNotes: true
-    }
+    notation: { staveTypes: [0, 1], rhythmMode: 'Hidden', extendBendArrowsOnTiedNotes: true }
 };
 
-const volumenSlider = document.getElementById('volumen-slider');
+// --- 2. VARIABLES DE ESTADO ---
+let currentTrackIndex = 0;
+const at = new alphaTab.AlphaTabApi(el, atSettings);
 
+// --- 3. LISTENER DEL SLIDER ---
 if (volumenSlider) {
     volumenSlider.addEventListener('input', (e) => {
         const nuevoVolumen = parseInt(e.target.value);
@@ -47,100 +36,59 @@ if (volumenSlider) {
     });
 }
 
-// Instancia global del motor
-const at = new alphaTab.AlphaTabApi(el, atSettings);
-
- 
- at.scoreLoaded.on((score) => {
+// --- 4. CARGA DE PARTITURA ---
+at.scoreLoaded.on((score) => {
     const trackList = document.getElementById('track-list');
     if (!trackList) return;
-
-btn.onclick = () => {
-    currentTrackIndex = index;  
-    at.renderTracks([track]);
-    
-    // Al cambiar de pista, actualizamos el slider al volumen de la nueva pista
-    if (volumenSlider) {
-        volumenSlider.value = Math.round((track.playbackInfo.volume / 16) * 100);
-    }
-    trackList.innerHTML = ''; // Limpieza total de renderizados previos
+    trackList.innerHTML = '';
 
     score.tracks.forEach((track, index) => {
-        const trackName = (track.name || `Pista ${index + 1}`).toUpperCase();
-        
-        // Crear el botón de instrumento
         const btn = document.createElement('button');
         btn.className = "btn-instrument"; 
-        btn.innerText = trackName;
+        btn.innerText = (track.name || `Pista ${index + 1}`).toUpperCase();
         btn.style.cssText = "margin-right: 8px; padding: 8px 12px; background: #2D333F; color: #FFFFFF; border: 1px solid #444; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: bold; transition: 0.2s;";
 
-        // Efecto Hover / Active
-        btn.onmouseover = () => btn.style.borderColor = "#E63946";
-        btn.onmouseout = () => btn.style.borderColor = "#2D333F";
+        btn.onclick = () => {
+            currentTrackIndex = index;
+            at.renderTracks([track]);
+            
+            // Actualizar slider al volumen de esta pista
+            if (volumenSlider) {
+                volumenSlider.value = Math.round((track.playbackInfo.volume / 16) * 100);
+            }
 
-        btn.onclick = () => { 
-            at.renderTracks([track]); 
- 
-            const name = trackName.toLowerCase();
+            // Lógica de instrumentos
+            const name = btn.innerText.toLowerCase();
             if (name.includes("bass") || name.includes("bajo")) track.playbackInfo.program = 34;
             else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) track.playbackInfo.program = 29;
             else track.playbackInfo.program = 25;
 
-            if (at.player && at.player.api) {
-                at.player.api.rebuildSynthesizer();
-            }
- 
+            if (at.player) at.player.rebuildSynthesizer();
             document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#2D333F");
             btn.style.background = "#E63946";
         };
-
         trackList.appendChild(btn);
     });
- 
+
     if(score.tracks.length > 0) {
         at.renderTracks([score.tracks[0]]);
+        if (volumenSlider) volumenSlider.value = Math.round((score.tracks[0].playbackInfo.volume / 16) * 100);
     }
-    
     aplicarColoresNegros(score);
 });
 
-  
-function cambiarInstrumento(trackIndex, newProgram) {
-    if(!at.score) return;
-    const track = at.score.tracks[trackIndex];
-    track.playbackInfo.program = parseInt(newProgram);
-    
-    if (at.player && at.player.api) {
-        at.player.api.rebuildSynthesizer();
-        console.log(`Track ${trackIndex} actualizado a programa ${newProgram}`);
-    }
-}
-
-// 1. Variable global para saber qué pista está sonando
-let currentTrackIndex = 0; 
-
-// 2. Función corregida para aplicar volumen a la pista activa
+// --- 5. FUNCIONES DE CONTROL ---
 function cambiarVolumen(trackIndex, valorPorcentaje) {
     if (!at || !at.score || !at.player) return;
-    
-    // Convertimos 0-100 a la escala de volumen de AlphaTab (0-16)
     const vol = Math.round((valorPorcentaje / 100) * 16);
-    
-    // Aplicamos al modelo
     const track = at.score.tracks[trackIndex];
     if (track) {
         track.playbackInfo.volume = vol;
-    }
-
-    // APLICACIÓN EN EL MOTOR:
-    // Si el player está listo, notificamos al motor de audio el cambio en el canal
-    if (at.playerReady) {
-        // En AlphaTab, cada pista corresponde a un canal MIDI (index + 1)
         at.player.changeTrackVolume(trackIndex, vol);
-        console.log(`Pista ${trackIndex} volumen ajustado a ${vol}`);
+        console.log(`Pista ${trackIndex} volumen: ${vol}`);
     }
 }
-
+ 
 at.playerReady.on(() => {
     console.log("Audio listo. Verificando estado del sintetizador...");
 
