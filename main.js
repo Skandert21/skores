@@ -62,9 +62,10 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
     const trackList = document.getElementById('track-list');
     if (!trackList) return;
  
-if (volumenSlider) {
-    volumenSlider.value = Math.round((track.playbackInfo.volume / 16) * 100);
-}
+if (volumenSlider && score.tracks.length > 0) {
+        const firstTrack = score.tracks[0];
+        volumenSlider.value = Math.round((firstTrack.playbackInfo.volume / 16) * 100);
+    }
 
     trackList.innerHTML = ''; // Limpieza total de renderizados previos
 
