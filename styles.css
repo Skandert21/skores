@@ -236,9 +236,11 @@ body {
     .sidebar {
         position: fixed;
         top: 0;
+        
         /* En móvil, el estado "abierto" es left: 0 */
         left: 0; 
         margin-left: 0; /* Reset del margen de escritorio */
+        
     }
 
     /* En móvil, el estado "cerrado" es left negativo */
@@ -278,8 +280,8 @@ body {
 
 /* --- Comportamiento específico: sidebar -> header en móvil --- */
 @media (max-width: 768px) {
-    /* Hacer que el toggle sea parte del header en lugar de fijo */
-    .menu-toggle {
+    /* Hacer que el toggle interno sea parte del header en lugar de fijo */
+    .sidebar .internal-toggle {
         position: relative;
         top: auto;
         right: auto;
@@ -322,7 +324,7 @@ body {
         display: none;
     }
 
-    /* Cuando se abre en móvil, mostrar como overlay lateral */
+    /* Cuando se abre en móvil, mostrar como overlay lateral (usa margin-left para la animación, igual que en escritorio) */
     .sidebar.mobile-open {
         position: fixed;
         top: 0;
@@ -339,13 +341,13 @@ body {
         background: var(--sidebar-bg);
         box-shadow: 0 20px 50px rgba(0,0,0,0.6);
         z-index: 1200;
-        transform: translateX(0);
-        transition: transform 0.25s ease;
+        margin-left: 0;
+        transition: margin-left 0.34s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease;
     }
 
     /* Estado inicial para animar entrada (oculto fuera de pantalla) */
     .sidebar.mobile-hidden {
-        transform: translateX(-110%);
+        margin-left: -420px; /* fuera de pantalla */
     }
 
     /* Ajustes visuales menores */
@@ -388,8 +390,98 @@ body {
 }
 
 /* Botón hamburguesa alternativo: visible sólo en móvil y encima del contenido */
-.mobile-only { display: none; }
+.mobile-only { display: block; position: fixed; top: 12px; right: 12px; z-index: 1300; }
+.mobile-only.menu-toggle { width: 44px; height: 44px; }
+
+/* Garantizar que el botón móvil específico conserve comportamiento fijo y la animación
+   (evita que reglas genéricas de .menu-toggle lo afecten) */
+#mobile-menu-toggle {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 1301;
+    transition: transform 0.28s ease, opacity 0.18s ease;
+    transform-origin: center;
+}
+
+#mobile-menu-toggle.open {
+    transform: rotate(90deg) scale(1.02);
+}
+
+/* Ocultar el botón interno dentro del sidebar para evitar duplicados visuales
+   (seguimos manteniéndolo en el DOM para que el JS lo pueda usar) */
+.sidebar .internal-toggle { display: none; }
+
+/* Animaciones y transición para sidebar en móvil */
 @media (max-width: 768px) {
-    .mobile-only { display: block; position: fixed; top: 12px; right: 12px; z-index: 1300; }
-    .mobile-only.menu-toggle { width: 44px; height: 44px; }
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 280px;
+        margin-left: -280px; /* start hidden like desktop */
+        opacity: 0;
+        z-index: 1200;
+        box-shadow: 2px 0 12px rgba(0,0,0,0.22);
+        transition: margin-left 0.34s cubic-bezier(.22,.9,.1,1), opacity 0.22s ease;
+       
+         
+    }
+
+    .sidebar.mobile-open {
+        margin-left: 0;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .sidebar.mobile-hidden,
+    .sidebar.mobile-collapsed {
+        margin-left: -280px;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Animación icono hamburguesa */
+    #mobile-menu-toggle, .menu-toggle {
+        transition: transform 0.28s ease, opacity 0.18s ease;
+        transform-origin: center;
+    }
+
+    #mobile-menu-toggle.open, .menu-toggle.open {
+        transform: rotate(90deg) scale(1.02);
+    }
+}
+
+/* Consolidated mobile sidebar transitions to avoid flicker and too-fast closing */
+@media (max-width: 768px) {
+    .sidebar {
+        /* Start as header (small) but when overlay classes applied we animate consistently */
+        transition-property: margin-left, opacity;
+        transition-duration: 340ms, 220ms;
+        transition-timing-function: cubic-bezier(.22,.9,.1,1), ease;
+        will-change: margin-left, opacity;
+        backface-visibility: hidden;
+        -webkit-transform: translateZ(0);
+    }
+
+    /* Closed state: fully off-screen and invisible */
+    .sidebar.mobile-hidden, .sidebar.mobile-collapsed, .sidebar.closed {
+        margin-left: -280px; /* match hidden position */
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    /* Open overlay: visible and in place */
+    .sidebar.mobile-open {
+        margin-left: 0;
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* Reduce chance of flicker by preventing display toggles and ensuring z-index remains high */
+    .sidebar { z-index: 1200; }
+
+    /* Allow a tiny easing delay for opacity on close so transform completes first visually */
+    .sidebar.mobile-hidden { transition-delay: 0ms, 60ms; }
 }

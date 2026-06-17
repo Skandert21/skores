@@ -111,7 +111,7 @@
     
 
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header"><button class="menu-toggle" id="menu-toggle">☰</button>
+        <div class="sidebar-header"><button class="menu-toggle internal-toggle" id="menu-toggle">☰</button>
             <h2 class="logo"><span>SK</span>ORES</h2>
         </div>
         
@@ -166,13 +166,25 @@ function toggleSidebarMobile() {
     if (sidebar.classList.contains('mobile-open')) {
         sidebar.classList.remove('mobile-open');
         sidebar.classList.add('mobile-hidden', 'mobile-collapsed');
-        if (menuToggle) menuToggle.innerText = '☰';
-        if (mobileMenuToggle) mobileMenuToggle.innerText = '☰';
+        if (menuToggle) {
+            menuToggle.innerText = '☰';
+            menuToggle.classList.remove('open');
+        }
+        if (mobileMenuToggle) {
+            mobileMenuToggle.innerText = '☰';
+            mobileMenuToggle.classList.remove('open');
+        }
     } else {
         sidebar.classList.remove('mobile-hidden', 'mobile-collapsed');
         sidebar.classList.add('mobile-open');
-        if (menuToggle) menuToggle.innerText = '✕';
-        if (mobileMenuToggle) mobileMenuToggle.innerText = '✕';
+        if (menuToggle) {
+            menuToggle.innerText = '✕';
+            menuToggle.classList.add('open');
+        }
+        if (mobileMenuToggle) {
+            mobileMenuToggle.innerText = '✕';
+            mobileMenuToggle.classList.add('open');
+        }
     }
 }
 
@@ -184,11 +196,18 @@ if (menuToggle) menuToggle.addEventListener('click', () => {
         // desktop flow: original behavior
         sidebar.classList.toggle('closed');
         menuToggle.innerText = sidebar.classList.contains('closed') ? '☰' : '✕';
+        // animate icon based on state
+        menuToggle.classList.toggle('open', menuToggle.innerText === '✕');
     }
 });
 
 if (mobileMenuToggle) mobileMenuToggle.addEventListener('click', () => {
-    if (window.innerWidth <= 768) toggleSidebarMobile();
+    // Delegar al mismo comportamiento del toggle principal para mantener consistencia
+    if (menuToggle) {
+        menuToggle.click();
+    } else {
+        toggleSidebarMobile();
+    }
 });
 
 window.addEventListener('resize', updateMobileMode);

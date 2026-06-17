@@ -7,7 +7,7 @@ const loadingText = document.getElementById('loading-text');
 // --- 1. CONFIGURACIÓN DE MOTOR (VISUAL Y AUDIO) ---
 const atSettings = {
     player: {
-        enablePlayer: true,
+        enablePlayer: false, // start disabled to avoid autoplay / AudioContext blocks
         enableCursor: true,
         enableWorker: true,
         workerScript: './alphaTab.min.js',  
