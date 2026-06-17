@@ -73,7 +73,7 @@ score.tracks.forEach((track, index) => {
     
     // Agregar la fila al contenedor principal (usando la variable que ya tienes)
     trackList.appendChild(trackContainer);
-});
+ 
         btn.onclick = async () => {
             currentTrackIndex = index;
             // Si se estaba reproduciendo, detener para evitar duplicados/velocidades
