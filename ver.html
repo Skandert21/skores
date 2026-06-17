@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SKores - Visor</title>
+    <meta property="og:description" content="Explora mi colección de partituras y composiciones musicales.">
+    <link href="./img/Sk.png" rel="icon">
+    <title>SKores | Biblioteca de Partituras</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@coderline/alphatab@1.8.1/dist/alphaTab.min.js"></script>
     <script>
@@ -315,28 +317,33 @@
         input[type="range"] { accent-color: var(--accent); }
 
         /* --- BARRA DE INSTRUMENTOS JUSTIFICADA --- */
+/* Contenedor principal de instrumentos */
 #track-list {
     display: grid;
-    /* Columna 1: fija para texto, Columna 2: flexible para el slider */
-    grid-template-columns: minmax(160px, auto) 1fr; 
-    gap: 15px;
+    /* Columna 1 para nombres, Columna 2 para sliders */
+    grid-template-columns: 180px 1fr; 
+    gap: 15px 20px; /* Espacio vertical y horizontal */
     align-items: center;
-    width: 100%;
-    margin-top: 20px;
-    padding: 10px;
+    padding: 20px;
 }
 
-/* Contenedor individual por fila */
+/* Fila para agrupar nombre + slider */
 .instrument-row {
-    display: contents; /* Permite que el grid vea a los hijos como celdas */
+    display: contents; /* Hace que los hijos se alineen directamente al grid padre */
 }
 
+/* Etiqueta del instrumento */
 .instrument-label {
-    font-size: 0.7rem;
+    font-size: 0.75rem;
     font-weight: 800;
-    color: var(--subtext);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: var(--text);
+    text-align: left;
+    white-space: nowrap;
+}
+
+/* Slider para que llene su espacio */
+.slider {
+    width: 100%;
 }
     </style>
 </head>
@@ -370,7 +377,7 @@
 
     <div id="loader-container">
         <div class="spinner"></div>
-        <p id="loading-text">Invocando partitura...</p>
+        <p id="loading-text">Exportando desde muy lejano...</p>
     </div>
 
     <div id="alphaTab"></div>
