@@ -207,18 +207,19 @@
         }
         /* Score Area - AlphaTab */
  
-/* --- ALPHATAB & CURSOR VISUAL --- */
+        /* --- ALPHATAB & CURSOR VISUAL --- */
         #alphaTab {
             position: relative;  /* INDISPENSABLE para la barra roja */
             width: 95%;
             max-width: 1100px;
             margin-bottom: 80px;
             border-radius: 8px;
-            overflow: hidden; /* Mantiene el cursor dentro de los bordes redondeados */
+            overflow: auto; /* Permite scroll si la partitura es alta */
             background: white;
             box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-            min-height: 400px;
+            min-height: 260px;
             display: block;
+            max-height: calc(100vh - 220px); /* Mantener visible el panel de controles */
         }
 
    /* Mejora del cursor para que destaque sobre el blanco de la partitura */
@@ -229,6 +230,12 @@
     z-index: 1000 !important;
     pointer-events: none;
     box-shadow: 0 0 8px rgba(230, 57, 70, 0.5); /* Sutil brillo rockero */
+}
+
+/* Forzar que el canvas de AlphaTab ocupe todo el ancho y se redimensione */
+.at-canvas {
+    width: 100% !important;
+    height: auto !important;
 }
 
 /* Estado visual del botón de bloqueo en el footer */
@@ -246,6 +253,15 @@
                 top: 0;
             }
             #alphaTab { width: 100%; border-radius: 0; }
+        }
+        @media (max-width: 420px) {
+            .sticky-footer {
+                right: 12px;
+                bottom: 12px;
+                padding: 6px 10px;
+            }
+            .master-panel { padding: 8px; }
+            #loader-container { padding: 24px; }
         }
     </style>
 </head>

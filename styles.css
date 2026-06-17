@@ -16,9 +16,10 @@ body {
     font-family: 'Inter', -apple-system, sans-serif;
     margin: 0;
     display: flex; /* Flexbox para manejar el layout */
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
+    width: 100%;
+    min-height: 100vh; /* permitir que la página crezca en móviles */
+    height: auto;
+    overflow: auto; /* permitir scroll en dispositivos móviles */
 }
 
 /* --- SIDEBAR --- */
@@ -239,6 +240,28 @@ body {
         width: 100vw;
     }
     .hero, .grid-tracks { padding: 80px 20px 40px; }
+}
+
+/* Ajustes adicionales para mejorar legibilidad en pantallas pequeñas */
+@media (max-width: 768px) {
+    .hero h1 {
+        font-size: 2rem;
+        padding-right: 20px;
+    }
+    .track-card {
+        padding: 18px;
+    }
+    .menu-toggle {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        right: 14px;
+    }
+}
+
+@media (max-width: 420px) {
+    .hero h1 { font-size: 1.6rem; }
+    .grid-tracks { gap: 18px; }
 }
 
 .measure-box {
