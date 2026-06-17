@@ -317,31 +317,62 @@
         input[type="range"] { accent-color: var(--accent); }
 
         /* --- BARRA DE INSTRUMENTOS JUSTIFICADA --- */
-/* Contenedor principal de instrumentos */
+/* --- PANEL PRINCIPAL --- */
+.master-panel {
+    display: flex;
+    flex-direction: column;
+    width: 95%;
+    max-width: 1100px;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin: 20px auto;
+    background: var(--panel);
+}
+
+/* --- FILA SUPERIOR (PLAY/STOP/VOLUMEN) --- */
+.top-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+/* --- LISTA DE PISTAS (GRID) --- */
 #track-list {
     display: grid;
-    /* Columna 1 para nombres, Columna 2 para sliders */
-    grid-template-columns: 180px 1fr; 
-    gap: 15px 20px; /* Espacio vertical y horizontal */
-    align-items: center;
-    padding: 20px;
+    /* Crea columnas automáticas. Ajusta 300px si quieres que sean más estrechas */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+    width: 100%;
 }
 
-/* Fila para agrupar nombre + slider */
+/* Cada fila de instrumento es su propio Grid interno */
 .instrument-row {
-    display: contents; /* Hace que los hijos se alineen directamente al grid padre */
+    display: grid;
+    grid-template-columns: 140px 1fr; /* 140px botón, resto slider */
+    align-items: center;
+    gap: 10px;
+    padding: 5px;
 }
 
-/* Etiqueta del instrumento */
-.instrument-label {
-    font-size: 0.75rem;
-    font-weight: 800;
-    color: var(--text);
+.btn-instrument {
+    background: #2D333F;
+    color: #FFFFFF;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-size: 10px;
+    font-weight: bold;
+    cursor: pointer;
     text-align: left;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Slider para que llene su espacio */
 .slider {
     width: 100%;
 }
@@ -355,7 +386,7 @@
     </header>
 
 <div class="master-panel">
-    <div class="top-row" style="display: flex; gap: 20px; align-items: center; width: 100%; margin-bottom: 15px;">
+    <div class="top-row">
         <a href="index.html" class="btn-main">INICIO</a>
         <div class="control-group">
             <button class="btn-main" id="play-pause-btn"><i class="fa-solid fa-play"></i></button>
@@ -367,7 +398,7 @@
         </div>
     </div>
 
-    <div class="instrument-bar" id="track-list" style="width: 100%; border-top: 1px solid var(--border); padding-top: 15px;">
+    <div class="instrument-bar" id="track-list">
         </div>
 </div>
 
