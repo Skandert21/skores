@@ -78,30 +78,16 @@ at.scoreLoaded.on((score) => {
 });
 
 function cambiarVolumen(trackIndex, valorPorcentaje) {
-    if (!at || !at.score || !at.player) return;
-    
-    // 1. Convertir 0-100 a escala 0-16
-    const vol = Math.round((valorPorcentaje / 100) * 16);
-    
-    // 2. Actualizar el modelo de datos
+    if (!at || !at.score) return;
+     
+    const vol = valorPorcentaje / 100;
+     
     const track = at.score.tracks[trackIndex];
     if (track) {
-        track.playbackInfo.volume = vol;
-    }
- 
-    if (at.player && at.player.mixer) {
         
-        try {
-            at.player.mixer.changeTrackVolume(trackIndex, vol);
-            console.log(`Volumen pista ${trackIndex} ajustado a ${vol}`);
-        } catch (e) {
-           
-            at.player.rebuildSynthesizer();
-            console.log("Reconstruyendo sintetizador por falta de método de mixer.");
-        }
-    } else {
+        at.changeTrackVolume([track], vol);
         
-        at.player.rebuildSynthesizer();
+        console.log(`Pista ${trackIndex} volumen ajustado a ${vol}`);
     }
 }
  
