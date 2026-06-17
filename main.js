@@ -45,26 +45,27 @@ at.scoreLoaded.on((score) => {
 
     score.tracks.forEach((track, index) => {
         // Contenedor para agrupar botón y slider de esta pista
-        const trackContainer = document.createElement('div');
-        trackContainer.style.display = "flex";
-        trackContainer.style.alignItems = "center";
-        trackContainer.style.marginBottom = "5px";
+// Contenedor principal con la clase para el Grid
+const trackContainer = document.createElement('div');
+trackContainer.className = "instrument-row"; 
 
-        // Botón de selección de pista
-        const btn = document.createElement('button');
-        btn.className = "btn-instrument"; 
-        btn.innerText = (track.name || `Pista ${index + 1}`).toUpperCase();
-        btn.style.cssText = "margin-right: 10px; padding: 6px 10px; background: #2D333F; color: #FFFFFF; border: 1px solid #444; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: bold;";
+// Botón de selección de pista
+const btn = document.createElement('button');
+btn.className = "btn-instrument instrument-label"; // "instrument-label" activa el Grid
+btn.innerText = (track.name || `Pista ${index + 1}`).toUpperCase();
 
-        // Slider individual para el volumen de esta pista (Documentación: changeTrackVolume)
-        const trackSlider = document.createElement('input');
-        trackSlider.type = "range";
-        trackSlider.min = "0";
-        trackSlider.max = "1";
-        trackSlider.step = "0.01";
-        // Asumimos que playbackInfo.volume está en 0-16, convertimos a 0-1
-        trackSlider.value = (track.playbackInfo.volume / 16).toString();
-        trackSlider.style.width = "80px";
+// Slider individual
+const trackSlider = document.createElement('input');
+trackSlider.type = "range";
+trackSlider.className = "slider"; // Clase común para todos los sliders
+trackSlider.min = "0";
+trackSlider.max = "1";
+trackSlider.step = "0.01";
+trackSlider.value = (track.playbackInfo.volume / 16).toString();
+ 
+trackContainer.appendChild(btn);
+trackContainer.appendChild(trackSlider);
+trackListContainer.appendChild(trackContainer);
         
         trackSlider.oninput = (e) => {
             const vol = parseFloat(e.target.value);
