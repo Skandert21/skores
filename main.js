@@ -39,41 +39,41 @@ if (volumenSlider) {
 
 // --- 4. CARGA DE PARTITURA ---
 at.scoreLoaded.on((score) => {
-    const trackList = document.getElementById('track-list');
-    if (!trackList) return;
-    trackList.innerHTML = '';
+ const trackList = document.getElementById('track-list');
+if (!trackList) return;
+trackList.innerHTML = '';
 
-    score.tracks.forEach((track, index) => {
-        // Contenedor para agrupar botón y slider de esta pista
-// Contenedor para agrupar botón y slider
-const trackContainer = document.createElement('div');
-trackContainer.className = "track-row"; // Aplicamos la clase CSS
+score.tracks.forEach((track, index) => {
+    // Contenedor para agrupar botón y slider de esta pista
+    const trackContainer = document.createElement('div');
+    trackContainer.className = "track-row"; // Clase aplicada
 
-// Botón de selección de pista
-const btn = document.createElement('button');
-btn.className = "btn-instrument"; // Aplicamos la clase CSS
-btn.innerText = (track.name || `Pista ${index + 1}`).toUpperCase();
+    // Botón de selección de pista
+    const btn = document.createElement('button');
+    btn.className = "btn-instrument"; // Clase aplicada
+    btn.innerText = (track.name || `Pista ${index + 1}`).toUpperCase();
 
-// Slider individual
-const trackSlider = document.createElement('input');
-trackSlider.type = "range";
-trackSlider.className = "track-slider"; // Aplicamos la clase CSS
-trackSlider.min = "0";
-trackSlider.max = "1";
-trackSlider.step = "0.01";
-trackSlider.value = (track.playbackInfo.volume / 16).toString();
+    // Slider individual para el volumen de esta pista
+    const trackSlider = document.createElement('input');
+    trackSlider.type = "range";
+    trackSlider.className = "track-slider"; // Clase aplicada
+    trackSlider.min = "0";
+    trackSlider.max = "1";
+    trackSlider.step = "0.01";
+    trackSlider.value = (track.playbackInfo.volume / 16).toString();
+    
+    trackSlider.oninput = (e) => {
+        const vol = parseFloat(e.target.value);
+        at.changeTrackVolume([track], vol);
+    };
 
-// Ensamblar
-trackContainer.appendChild(btn);
-trackContainer.appendChild(trackSlider);
-trackListContainer.appendChild(trackContainer);
-        
-        trackSlider.oninput = (e) => {
-            const vol = parseFloat(e.target.value);
-            // Llamada directa a la API documentada
-            at.changeTrackVolume([track], vol);
-        };
-
+    // Agregar el botón y el slider al contenedor de la fila
+    trackContainer.appendChild(btn);
+    trackContainer.appendChild(trackSlider);
+    
+    // Agregar la fila al contenedor principal (usando la variable que ya tienes)
+    trackList.appendChild(trackContainer);
+});
         btn.onclick = async () => {
             currentTrackIndex = index;
             // Si se estaba reproduciendo, detener para evitar duplicados/velocidades
