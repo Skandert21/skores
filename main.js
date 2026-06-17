@@ -183,9 +183,10 @@ const atSettings = {
         });
     }
 
+}
+
     // --- Mapa local de volúmenes por pista (estado)
     const trackVolumes = {};
-
     /**
      * Ajusta el volumen por pista usando las APIs internas de AlphaTab cuando están disponibles.
      * Se intenta: api.setChannelVolume / api.setChannelMixVolume / api._synthesizer.channelSetMixVolume
