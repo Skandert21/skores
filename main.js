@@ -169,13 +169,13 @@ at.playerReady.on(() => {
     if (loaderContainer) loaderContainer.style.display = 'none';
     if (playPause) {
         playPause.style.opacity = "1";
-        playPause.innerText = "▶ PLAY";
+        playPause.innerHTML = '<i class="fa-solid fa-play"></i>';
     }
 });
 
 at.playerStateChanged.on(e => {
     if (playPause) {
-        playPause.innerText = (e.state === 1) ? "⏸ PAUSE" : "▶ PLAY";
+        playPause.innerHTML = (e.state === 1) ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
     }
 });
  
