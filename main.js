@@ -77,15 +77,31 @@ at.scoreLoaded.on((score) => {
     aplicarColoresNegros(score);
 });
 
-// --- 5. FUNCIONES DE CONTROL ---
 function cambiarVolumen(trackIndex, valorPorcentaje) {
     if (!at || !at.score || !at.player) return;
+    
+    // 1. Convertir 0-100 a escala 0-16
     const vol = Math.round((valorPorcentaje / 100) * 16);
+    
+    // 2. Actualizar el modelo de datos
     const track = at.score.tracks[trackIndex];
     if (track) {
         track.playbackInfo.volume = vol;
-        at.player.changeTrackVolume(trackIndex, vol);
-        console.log(`Pista ${trackIndex} volumen: ${vol}`);
+    }
+ 
+    if (at.player && at.player.mixer) {
+        
+        try {
+            at.player.mixer.changeTrackVolume(trackIndex, vol);
+            console.log(`Volumen pista ${trackIndex} ajustado a ${vol}`);
+        } catch (e) {
+           
+            at.player.rebuildSynthesizer();
+            console.log("Reconstruyendo sintetizador por falta de método de mixer.");
+        }
+    } else {
+        
+        at.player.rebuildSynthesizer();
     }
 }
  
