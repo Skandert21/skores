@@ -354,26 +354,22 @@
         <h1>Skores</h1>
     </header>
 
-    <div class="master-panel">
-        <div class="control-group">
-            <a href="index.html" class="btn-main" style="text-decoration: none; background: transparent; border: 1px solid var(--border);  z-index: 1001 !important;">
-                 INICIO
-            </a>
-        </div>
-        
+<div class="master-panel">
+    <div class="top-row" style="display: flex; gap: 20px; align-items: center; width: 100%; margin-bottom: 15px;">
+        <a href="index.html" class="btn-main">INICIO</a>
         <div class="control-group">
             <button class="btn-main" id="play-pause-btn"><i class="fa-solid fa-play"></i></button>
             <button class="btn-main" id="stop-btn"><i class="fa-solid fa-stop"></i></button>
         </div>
-
-    <div class="control-group">
-    <label>Volumen Maestro:</label>
-    <input type="range" id="master-volume-slider" min="0" max="100" value="100" 
-           oninput="setMasterVolume(this.value)">
-</div>
-        <div class="instrument-bar" id="track-list">
+        <div class="control-group">
+            <label>Volumen Maestro:</label>
+            <input type="range" id="master-volume-slider" min="0" max="100" value="100">
         </div>
     </div>
+
+    <div class="instrument-bar" id="track-list" style="width: 100%; border-top: 1px solid var(--border); padding-top: 15px;">
+        </div>
+</div>
 
     <div id="loader-container">
         <div class="spinner"></div>
