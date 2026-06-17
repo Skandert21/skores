@@ -7,7 +7,7 @@ const loadingText = document.getElementById('loading-text');
 // --- 1. CONFIGURACIÓN DE MOTOR (VISUAL Y AUDIO) ---
 const atSettings = {
     player: {
-        enablePlayer: false, // start disabled to avoid autoplay / AudioContext blocks
+        enablePlayer: true, // enable player so playback API is available (resume handled on user gesture)
         enableCursor: true,
         enableWorker: true,
         workerScript: './alphaTab.min.js',  
@@ -405,33 +405,43 @@ async function buildKey(trackId){
 }
 
 // --- 5. INTERACCIONES DEL DOM ---
-playPause.onclick = async e => {
-    e.preventDefault();
-    if (at.player?.api?.audioContext?.state === 'suspended') {
-        await at.player.api.audioContext.resume();
-    }
-    at.playPause();
-};
+if (playPause) {
+    playPause.onclick = async e => {
+        e.preventDefault();
+        try {
+            if (at.player?.api?.audioContext?.state === 'suspended') {
+                await at.player.api.audioContext.resume();
+            }
+        } catch (err) {
+            console.warn('No se pudo reanudar AudioContext automáticamente:', err);
+        }
+        if (typeof at.playPause === 'function') at.playPause();
+    };
 
-document.getElementById('stop-btn').onclick = () => {
-    if (at.player) at.stop(); 
-};
+    // Key binding solo si existe el botón
+    window.addEventListener('keydown', e => {
+        if (e.code === 'Space' || e.key === ' ') {
+            e.preventDefault();
+            playPause.click(); 
+        }
+    });
+}
+
+const stopBtn = document.getElementById('stop-btn');
+if (stopBtn) {
+    stopBtn.onclick = () => { if (at.player) at.stop(); };
+}
 
 const lockBtnFooter = document.getElementById('lock-scroll-footer');
 let isScrollLocked = false;
-lockBtnFooter.onclick = () => {
-    isScrollLocked = !isScrollLocked;
-    at.settings.display.autoScroll = isScrollLocked ? 0 : 1;
-    at.updateSettings();
-    lockBtnFooter.innerText = isScrollLocked ? '🔒\uFE0E' : '🔓\uFE0E';
-};
-
-window.addEventListener('keydown', e => {
-    if (e.code === 'Space' || e.key === ' ') {
-        e.preventDefault();
-        playPause.click(); 
-    }
-});
+if (lockBtnFooter) {
+    lockBtnFooter.onclick = () => {
+        isScrollLocked = !isScrollLocked;
+        at.settings.display.autoScroll = isScrollLocked ? 0 : 1;
+        at.updateSettings();
+        lockBtnFooter.innerText = isScrollLocked ? '🔒\uFE0E' : '🔓\uFE0E';
+    };
+}
 
 // --- 6. BOOTSTRAP (PUNTO DE ENTRADA PRINCIPAL) ---
  
