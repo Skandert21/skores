@@ -42,15 +42,8 @@ const volumenSlider = document.getElementById('volumen-slider');
 
 if (volumenSlider) {
     volumenSlider.addEventListener('input', (e) => {
-        // Obtenemos el valor del slider (0 a 100)
         const nuevoVolumen = parseInt(e.target.value);
-        
-        // Aplicamos el volumen a la pista actual.
-        // Asumiendo que at.score.tracks[0] es la pista renderizada por defecto,
-        // o puedes guardar el índice de la pista seleccionada en una variable global.
-        
-        // Ejemplo para aplicarlo a la primera pista:
-        cambiarVolumen(0, nuevoVolumen); 
+        cambiarVolumen(currentTrackIndex, nuevoVolumen);
     });
 }
 
@@ -61,12 +54,15 @@ const at = new alphaTab.AlphaTabApi(el, atSettings);
  at.scoreLoaded.on((score) => {
     const trackList = document.getElementById('track-list');
     if (!trackList) return;
- 
-if (volumenSlider && score.tracks.length > 0) {
-        const firstTrack = score.tracks[0];
-        volumenSlider.value = Math.round((firstTrack.playbackInfo.volume / 16) * 100);
-    }
 
+btn.onclick = () => {
+    currentTrackIndex = index;  
+    at.renderTracks([track]);
+    
+    // Al cambiar de pista, actualizamos el slider al volumen de la nueva pista
+    if (volumenSlider) {
+        volumenSlider.value = Math.round((track.playbackInfo.volume / 16) * 100);
+    }
     trackList.innerHTML = ''; // Limpieza total de renderizados previos
 
     score.tracks.forEach((track, index) => {
@@ -120,33 +116,28 @@ function cambiarInstrumento(trackIndex, newProgram) {
     }
 }
 
-// Función para cambiar el volumen sin romper el motor de audio
-function cambiarVolumen(trackIndex, valorPorcentaje) {
-    if (!at.score) return;
-    
-    const track = at.score.tracks[trackIndex];
-    if (!track) return;
+// 1. Variable global para saber qué pista está sonando
+let currentTrackIndex = 0; 
 
-    // AlphaTab maneja el volumen en una escala de 0 a 16.
-    // Convertimos el porcentaje (0 a 100) a la escala de AlphaTab:
-    const volumenCalculado = Math.round((valorPorcentaje / 100) * 16);
+// 2. Función corregida para aplicar volumen a la pista activa
+function cambiarVolumen(trackIndex, valorPorcentaje) {
+    if (!at || !at.score || !at.player) return;
     
-    // Asignamos asegurando que no se pase de los límites
-    track.playbackInfo.volume = Math.max(0, Math.min(16, volumenCalculado));
+    // Convertimos 0-100 a la escala de volumen de AlphaTab (0-16)
+    const vol = Math.round((valorPorcentaje / 100) * 16);
     
-    if (at.player && at.player.api) {
-        try {
-            // Intentamos la API limpia primero (si tu versión de AlphaTab la soporta)
-            if (typeof at.changeTrackVolume === 'function') {
-                at.changeTrackVolume(track);
-            } else {
-                // Fallback seguro: el mismo que usas para los instrumentos y que sabemos que funciona
-                at.player.api.rebuildSynthesizer();
-            }
-            console.log(`Pista ${trackIndex}: Volumen ajustado a ${track.playbackInfo.volume}/16`);
-        } catch (e) {
-            console.error("Error al actualizar volumen:", e);
-        }
+    // Aplicamos al modelo
+    const track = at.score.tracks[trackIndex];
+    if (track) {
+        track.playbackInfo.volume = vol;
+    }
+
+    // APLICACIÓN EN EL MOTOR:
+    // Si el player está listo, notificamos al motor de audio el cambio en el canal
+    if (at.playerReady) {
+        // En AlphaTab, cada pista corresponde a un canal MIDI (index + 1)
+        at.player.changeTrackVolume(trackIndex, vol);
+        console.log(`Pista ${trackIndex} volumen ajustado a ${vol}`);
     }
 }
 
