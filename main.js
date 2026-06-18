@@ -12,7 +12,7 @@ const atSettings = {
         enableCursor: true,
         enableWorker: true,
         workerScript: './alphaTab.min.js',  
-        soundFont: 'https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/fonts/GeneralUser-GS.sf2'
+        soundFont: 'https://yellow-snowflake-cec7.johelitoxd.workers.dev/fonts/GeneralUser-GS.sf2'
     },
     display: {
         engine: 'svg',
@@ -368,7 +368,7 @@ if (typeof document !== 'undefined') {
     if (trackId) {
         try {
             const keyBytes = await buildKey(trackId); 
-            const urlR2 = `https://pub-5ff3fea08b3544d9a17ded7a90ef2c9b.r2.dev/${encodeURIComponent(trackId)}.gp.bin`;
+            const urlR2 = `https://yellow-snowflake-cec7.johelitoxd.workers.dev/${encodeURIComponent(trackId)}.gp.bin`;
             
             // Ya no hay await initSoundFont(). Directo a cargar la partitura.
             cargarPartituraProtegida(urlR2, keyBytes, at);
