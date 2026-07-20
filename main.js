@@ -74,58 +74,34 @@ score.tracks.forEach((track, index) => {
     // Agregar la fila al contenedor principal (usando la variable que ya tienes)
     trackList.appendChild(trackContainer);
  
-        btn.onclick = async () => {
-            btn.blur();
-            currentTrackIndex = index;
-            // Si se estaba reproduciendo, detener para evitar duplicados/velocidades
-            const wasPlaying = !!isPlaying;
-            try {
-                // Intento de parada segura
-                if (wasPlaying && at && typeof at.stop === 'function') {
-                    at.stop();
-                }
+      btn.onclick = async () => {
+    btn.blur(); // Evitar rebote del espacio
 
-                // Reinicio exhaustivo del estado de reproducción para evitar acumulación
-                if (at && at.player) {
-                    // Forzar playbackSpeed neutral (1)
-                    try { if (typeof at.player.playbackSpeed !== 'undefined') at.player.playbackSpeed = 1; } catch(e) { console.warn('No se pudo normalizar playbackSpeed', e); }
+    currentTrackIndex = index;
 
-                    // Resetear buffers de salida si la API lo expone
-                    try { if (at.player.api && at.player.api.output && typeof at.player.api.output.resetSamples === 'function') at.player.api.output.resetSamples(); } catch(e) { console.warn('No se pudo resetear output samples', e); }
+    // 1. Asegurar que el AudioContext esté activo (Evita el bloqueo de navegadores)
+    if (at.player && at.player.audioContext && at.player.audioContext.state === 'suspended') {
+        await at.player.audioContext.resume();
+    }
 
-                    // Llamada genérica a reset si está disponible
-                    try { if (at.player.api && typeof at.player.api.reset === 'function') at.player.api.reset(); } catch(e) { console.warn('No se pudo ejecutar player.api.reset()', e); }
-                }
-            } catch (e) {
-                console.warn('No se pudo detener antes de cambiar pista:', e);
-            }
+    // 2. Detener limpiamente mediante la API principal de AlphaTab (sin tocar nodos de bajo nivel)
+    if (at.player && at.player.state === 1) { // 1 = Playing
+        at.stop();
+    }
 
-            // Renderizar la nueva pista en un estado limpio
-            at.renderTracks([track]);
-            
-            // Lógica de instrumentos (mantenida)
-            const name = btn.innerText.toLowerCase();
-            if (name.includes("bass") || name.includes("bajo")) track.playbackInfo.program = 34;
-            else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) track.playbackInfo.program = 29;
-            else track.playbackInfo.program = 25;
+    // 3. Cambiar la pista
+    at.renderTracks([track]);
 
-            // Nota: Si rebuildSynthesizer falla en tu versión, comenta la siguiente línea
-            if (at.player && typeof at.player.rebuildSynthesizer === 'function') {
-                at.player.rebuildSynthesizer();
-            }
+    // 4. Cambiar el instrumento (si aplica)
+    const name = btn.innerText.toLowerCase();
+    if (name.includes("bass") || name.includes("bajo")) track.playbackInfo.program = 34;
+    else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) track.playbackInfo.program = 29;
+    else track.playbackInfo.program = 25;
 
-            // Si antes estaba sonando, intentar reanudar reproducción limpia
-            try {
-                if (wasPlaying) {
-                    if (at && typeof at.play === 'function') at.play();
-                    else if (at && typeof at.playPause === 'function') at.playPause();
-                    else if (at.player && typeof at.player.play === 'function') at.player.play();
-                }
-            } catch (e) { console.warn('No se pudo reanudar automáticamente:', e); }
-
-            document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#2D333F");
-            btn.style.background = "#E63946";
-        };
+    // Actualizar estilos UI
+    document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#2D333F");
+    btn.style.background = "#E63946";
+};
 
         trackContainer.appendChild(btn);
         trackContainer.appendChild(trackSlider);
