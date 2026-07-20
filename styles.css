@@ -35,6 +35,7 @@ body {
     overflow: hidden; /* Evita que el sidebar genere scroll propio */
     z-index: 1000;
     position: relative;
+    transition: margin-left 0.3s ease-in-out;
 }
 
 .sidebar-header {
@@ -60,7 +61,7 @@ body {
 .sub-menu.open {
     /* Aquí limitamos la altura del desplegable */
     /* 50vh asegura que siempre deje espacio para otras carpetas */
-    max-height: 50vh; 
+    max-height: 350px;
     overflow-y: auto; /* Se activa el scroll SOLO cuando el contenido supera esa altura */
 }
 
