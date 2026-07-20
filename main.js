@@ -75,37 +75,42 @@ score.tracks.forEach((track, index) => {
     trackList.appendChild(trackContainer);
  
 btn.onclick = async () => {
-    btn.blur(); // Evitar rebote del espacio
-
+    btn.blur();
     currentTrackIndex = index;
 
-    // 1. Asegurar que el AudioContext esté activo
     if (at.player && at.player.audioContext && at.player.audioContext.state === 'suspended') {
         await at.player.audioContext.resume();
     }
 
-    // 2. Detener limpiamente
-    if (at.player && at.player.state === 1) { 
+    // 1. MEMORIA: Guardar el estado actual (¿Estaba sonando? ¿En qué pulso iba?)
+    const wasPlaying = (at.player && at.player.state === 1);
+    const savedTick = at.tickPosition; // Guarda la posición exacta del cursor
+
+    // 2. Detener para cambiar de forma segura
+    if (wasPlaying) { 
         at.stop();
     }
 
-    // 3. ¡CLAVE! Cambiar el instrumento ANTES de renderizar
+    // 3. Cambiar instrumento
     const name = btn.innerText.toLowerCase();
-    if (name.includes("bass") || name.includes("bajo")) {
-        track.playbackInfo.program = 34;
-    } else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) {
-        track.playbackInfo.program = 29;
-    } else {
-        track.playbackInfo.program = 25;
-    }
+    if (name.includes("bass") || name.includes("bajo")) track.playbackInfo.program = 34;
+    else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) track.playbackInfo.program = 29;
+    else track.playbackInfo.program = 25;
 
-    // 4. Renderizar la pista nueva con el instrumento ya actualizado
+    // 4. Renderizar la pista nueva
     at.renderTracks([track]);
 
-    // 5. ¡CLAVE! Reconstruir el sintetizador
-    // Esto es obligatorio al cambiar de pistas o instrumentos dinámicamente, 
-    // de lo contrario el audio se corrompe y genera el "rebote" instantáneo.
+    // 5. RESTAURAR: Volver a poner el cursor donde estaba y reanudar si aplica
+    at.tickPosition = savedTick;
     
+    if (wasPlaying) {
+        try {
+            at.play(); // Vuelve a darle play automáticamente
+        } catch (e) {
+            console.warn("No se pudo reanudar automáticamente tras el cambio:", e);
+        }
+    }
+
     // Actualizar estilos UI
     document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#2D333F");
     btn.style.background = "#E63946";
