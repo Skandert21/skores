@@ -105,10 +105,7 @@ btn.onclick = async () => {
     // 5. ¡CLAVE! Reconstruir el sintetizador
     // Esto es obligatorio al cambiar de pistas o instrumentos dinámicamente, 
     // de lo contrario el audio se corrompe y genera el "rebote" instantáneo.
-    if (at.player && typeof at.player.rebuildSynthesizer === 'function') {
-        at.player.rebuildSynthesizer();
-    }
-
+    
     // Actualizar estilos UI
     document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#2D333F");
     btn.style.background = "#E63946";
@@ -169,27 +166,11 @@ function cambiarVolumen(trackIndex, valorPorcentaje) {
     }
 }
  
+//  VERSIÓN CORREGIDA Y LIMPIA
 at.playerReady.on(() => {
-    console.log("Audio listo. Verificando estado del sintetizador...");
+    console.log("Audio listo.");
 
-    if (at.player && at.player.api) {
-        try {
-            // 1. Resetear el mixer interno
-            if (typeof at.player.api.reset === 'function') at.player.api.reset();
-            
-            // 2. Forzar la reconstrucción con los nuevos programas (29, 34, etc.)
-            at.player.api.rebuildSynthesizer();
-            
-            // 3. LOG DE VERIFICACIÓN: Ver qué cargó el motor realmente
-            at.score.tracks.forEach((t, i) => {
-                console.log(`Verificación Final - Track ${i}: Program ${t.playbackInfo.program}`);
-            });
-
-        } catch(e) {
-            console.error("Error en parches finales:", e);
-        }
-    }
-
+    // Simplemente actualizamos la interfaz visual, nada de tocar el sintetizador
     if (loaderContainer) loaderContainer.style.display = 'none';
     if (playPause) {
         playPause.style.opacity = "1";
