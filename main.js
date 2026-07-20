@@ -74,29 +74,40 @@ score.tracks.forEach((track, index) => {
     // Agregar la fila al contenedor principal (usando la variable que ya tienes)
     trackList.appendChild(trackContainer);
  
-      btn.onclick = async () => {
+btn.onclick = async () => {
     btn.blur(); // Evitar rebote del espacio
 
     currentTrackIndex = index;
 
-    // 1. Asegurar que el AudioContext esté activo (Evita el bloqueo de navegadores)
+    // 1. Asegurar que el AudioContext esté activo
     if (at.player && at.player.audioContext && at.player.audioContext.state === 'suspended') {
         await at.player.audioContext.resume();
     }
 
-    // 2. Detener limpiamente mediante la API principal de AlphaTab (sin tocar nodos de bajo nivel)
-    if (at.player && at.player.state === 1) { // 1 = Playing
+    // 2. Detener limpiamente
+    if (at.player && at.player.state === 1) { 
         at.stop();
     }
 
-    // 3. Cambiar la pista
+    // 3. ¡CLAVE! Cambiar el instrumento ANTES de renderizar
+    const name = btn.innerText.toLowerCase();
+    if (name.includes("bass") || name.includes("bajo")) {
+        track.playbackInfo.program = 34;
+    } else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) {
+        track.playbackInfo.program = 29;
+    } else {
+        track.playbackInfo.program = 25;
+    }
+
+    // 4. Renderizar la pista nueva con el instrumento ya actualizado
     at.renderTracks([track]);
 
-    // 4. Cambiar el instrumento (si aplica)
-    const name = btn.innerText.toLowerCase();
-    if (name.includes("bass") || name.includes("bajo")) track.playbackInfo.program = 34;
-    else if (name.includes("guitar") || name.includes("gtr") || name.includes("lead")) track.playbackInfo.program = 29;
-    else track.playbackInfo.program = 25;
+    // 5. ¡CLAVE! Reconstruir el sintetizador
+    // Esto es obligatorio al cambiar de pistas o instrumentos dinámicamente, 
+    // de lo contrario el audio se corrompe y genera el "rebote" instantáneo.
+    if (at.player && typeof at.player.rebuildSynthesizer === 'function') {
+        at.player.rebuildSynthesizer();
+    }
 
     // Actualizar estilos UI
     document.querySelectorAll('.btn-instrument').forEach(b => b.style.background = "#2D333F");
