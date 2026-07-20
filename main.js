@@ -75,6 +75,7 @@ score.tracks.forEach((track, index) => {
     trackList.appendChild(trackContainer);
  
         btn.onclick = async () => {
+            btn.blur();
             currentTrackIndex = index;
             // Si se estaba reproduciendo, detener para evitar duplicados/velocidades
             const wasPlaying = !!isPlaying;
