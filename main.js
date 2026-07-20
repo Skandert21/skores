@@ -311,27 +311,6 @@ async function buildKey(trackId){
 
 // --- 5. INTERACCIONES DEL DOM ---
 if (typeof document !== 'undefined') {
-    // Play / Pause
-    playPause = document.getElementById('play-pause-btn');
-    if (playPause) {
-        playPause.onclick = async e => {
-            e.preventDefault();
-            try {
-                if (at?.player?.api?.audioContext?.state === 'suspended') {
-                    await at.player.api.audioContext.resume();
-                }
-            } catch (err) { console.warn('No se pudo reanudar AudioContext automáticamente:', err); }
-            if (typeof at?.playPause === 'function') at.playPause();
-        };
-
-        window.addEventListener('keydown', e => {
-            if (e.code === 'Space' || e.key === ' ') {
-                e.preventDefault();
-                playPause.click();
-            }
-        });
-    }
-
     // Stop
     const stopBtn = document.getElementById('stop-btn');
     if (stopBtn) stopBtn.onclick = () => { if (at?.player) at.stop(); };
@@ -379,28 +358,46 @@ document.addEventListener('DOMContentLoaded', () => {
 // durante la carga si el DOM aún no estaba listo. Es deliberadamente conservadora.
 function init() {
     try {
-        // Vincular botón Play/Pause si no se vinculó antes
         if (!playPause) playPause = document.getElementById('play-pause-btn');
+        
+        // Solo vinculamos los eventos si no lo hemos hecho antes
         if (playPause && !playPause.dataset?.bound) {
+            
+            // Marcamos como vinculado para evitar duplicados
+            playPause.dataset.bound = '1'; 
+            
             playPause.onclick = async e => {
                 e.preventDefault();
+                
+                // Quitar el foco para evitar el rebote nativo del HTML
+                playPause.blur(); 
+
                 try {
-                    if (at?.player?.api?.audioContext?.state === 'suspended') {
-                        await at.player.api.audioContext.resume();
+                    // Nota: Asegurado que la ruta sea at.player.audioContext
+                    if (at?.player?.audioContext?.state === 'suspended') {
+                        await at.player.audioContext.resume();
                     }
-                } catch (err) { console.warn('No se pudo reanudar AudioContext automáticamente:', err); }
+                } catch (err) { 
+                    console.warn('No se pudo reanudar AudioContext:', err); 
+                }
+                
                 if (typeof at?.playPause === 'function') at.playPause();
             };
-            playPause.dataset.bound = '1';
+            
+            // Un único listener global para el espacio
             window.addEventListener('keydown', e => {
                 if (e.code === 'Space' || e.key === ' ') {
-                    e.preventDefault();
-                    playPause.click();
+                    e.preventDefault(); // Evita scroll
+                    
+                    if (document.activeElement instanceof HTMLElement) {
+                        document.activeElement.blur(); // Desenfocar cualquier botón
+                    }
+                    
+                    playPause.click(); // Ejecuta el click de arriba
                 }
             });
         }
 
-        // Ocultar loader si ya está listo
         if (loaderContainer) loaderContainer.style.display = 'none';
     } catch (err) {
         console.error('init() fallo:', err);
