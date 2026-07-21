@@ -75,9 +75,25 @@
       "nombre": "Oscuridad en la Noche Plutónica y nada más", 
       "url": "circo-dramaturgo/la-mancha/Oscuridad-en-la-noche-plutonica-y-nada-mas" 
     },
+     { 
+      "nombre": "1845", 
+      "url": "#" 
+    },
       { 
       "nombre": "El Señor de Lágrimas", 
       "url": "circo-dramaturgo/la-mancha/El-Senor-de-Lagrimas" 
+    },
+     { 
+      "nombre": "Carretera vieja", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Diagramas y planos", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Nos vemos en roma", 
+      "url": "#" 
     }
  ]
 },
