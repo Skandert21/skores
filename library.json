@@ -2,7 +2,7 @@
  {
   "CIRCO DRAMATURGO":{
 
-      "Desconozco la causa de los acontecimientos": [
+      "Desconozco la causa de los acontecimientos (2023-2024)": [
    { 
       "nombre": "Esas sombras me hablan y me intentan consolar bajo la lluvia", 
       "url": "circo-dramaturgo/desconozco-las-causas/Esas-sombras-me-hablan-y-me-intentan-consolar-bajo-la-lluvia" 
@@ -30,7 +30,7 @@
 
 
   ],
-  "Tuve un sueño, Desperté llorando, No estaba Durmiendo": [
+  "Tuve un sueño, Desperté llorando, No estaba Durmiendo (2024)": [
    { 
       "nombre": "Ciudades Antiguas", 
       "url": "circo-dramaturgo/desperte-llorando/Ciudades-Antiguas" 
@@ -62,7 +62,7 @@
 
 
   ],
-  "La Mancha": [
+  "La Mancha (2025)": [
      { 
       "nombre": "La Mancha", 
       "url": "circo-dramaturgo/la-mancha/La-Mancha" 
@@ -145,35 +145,291 @@
 },
 "DARK CHILDHOOD":{
 
-      "Estigma Incandescente": [
+   "En Declive (2017-2018)": [
+   { 
+      "nombre": "2 A.M", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Acto I", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Es tu decisión", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Eres perfecta", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Muñequita", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Acto II", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Al final", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Errores de los que no te podrás despegar", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "La lluvia no ayuda", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Acto III", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Deserción", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "No sabes lo que se siente", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Mi inseguridad es tan subversiva", 
+      "url": "#" 
+    },
+     { 
+      "nombre": "Proyección", 
+      "url": "#" 
+    },
+
+
+  ], 
+
+      "Estigma Incandescente (2020-2021)": [
+          { 
+      "nombre": "Capítulo I 'Debe pasar'", 
+      "url": "#" 
+    },
+      { 
+      "nombre": "La dama vestida de rojo", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Carta negra escrita apócrifamente", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Capítulo II 'De no haber pasado'", 
+      "url": "#" 
+    },
    { 
       "nombre": "Bermellón Cinabrio", 
       "url": "#" 
-    } 
+    },
+    { 
+      "nombre": "Inversión", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Capítulo III 'Conversación entre mi trastorno y yo'", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "D.I.L.N.A.P.D", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Mentalidad de Adarve", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Quién pertenece", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Un deseo más a la vela", 
+      "url": "#" 
+    },
 
-  ],  "Cenizas de un Estigma Incandescente": [
+  ],  "Cenizas de un Estigma Incandescente (2021)": [
+    { 
+      "nombre": "Causa sin efecto", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Envuelto en telarañas", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "La vez que me hicieron menos", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Soliloquio Monolítico", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "No perteneces a él", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Deturpación en los hilos", 
+      "url": "#" 
+    },
    { 
       "nombre": "Cenizas de un Estigma Incandescente", 
       "url": "#" 
-    } 
+    },
+    { 
+      "nombre": "La putrefacción de la uva", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "No pensaste en qué le pasaría al gato", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "El temor hacia la oscuridad", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Interruptor dañado en el botón de apagado", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "La lluvia otoñal también cae en la depresión", 
+      "url": "#" 
+    },
 
   ],
-    "Sonder": [
+    "Sonder (2021)": [
+      { 
+      "nombre": "Obertura Anagnórisis", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Circo fúnebre funambulesco", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Elipsim", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "De todas formas ya estaré muerto en 5 minutos", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Carta para nadie", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "La tristeza del constructor de paredes", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Kuebiko", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Exulansis", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Obnubilada perspectiva", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "El transeúnte y su catástasis", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Inevitables pensamientos que llevan a un ataque de pánico controlado", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Sábado / Interludio", 
+      "url": "#" 
+    },
    { 
-      "nombre": "Monachopsis", 
+      "nombre": "Interludio / Monachopsis", 
       "url": "dark-childhood/sonder/Monachopsis" 
     } 
+    { 
+      "nombre": "Sonder(Mundo)", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Jouska (Consecuencias)", 
+      "url": "#" 
+    }
 
   ],
-  "Podrida Humanidad I": [
+  "Podrida Humanidad I (2022)": [
+    { 
+      "nombre": "Desfase.Dualidad", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "En contra de todo lo ético y lo moral", 
+      "url": "#" 
+    },
    { 
       "nombre": "Agujas", 
       "url": "#" 
-    } 
-
+    },
+    { 
+      "nombre": "Espejismo de odio perpetuo", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Carrusel de ojos", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Si las pesadillas tuviesen banda sonora", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Descomposición", 
+      "url": "#" 
+    },
+{ 
+      "nombre": "Cualquier excusa se hace válida cuando de actos de violencia injustificable se trata", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "No somos lo que defendemos, ni de cerca", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Quebrado.Roto.Astillado", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Jardín de espejos", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Errores", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Envenenamiento.Dudas", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Me ahogo en cosas que no digo", 
+      "url": "#" 
+    },
+    { 
+      "nombre": "Mi alma lloró al ver su reflejo en un espejo y no quiso volver a ver mi rostro", 
+      "url": "#" 
+    }
 
   ],
-  "Podrida Humanidad II": [
+  "Podrida Humanidad II (2022)": [
      { 
       "nombre": "Autolisis", 
       "url": "#" 
