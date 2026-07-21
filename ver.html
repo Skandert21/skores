@@ -333,29 +333,43 @@
 /* --- FILA SUPERIOR (PLAY/STOP/VOLUMEN) --- */
 .top-row {
     display: flex;
-    gap: 20px;
+    flex-wrap: wrap; 
+    gap: 12px;
     align-items: center;
+    justify-content: space-between;
     border-bottom: 1px solid var(--border);
     padding-bottom: 15px;
     margin-bottom: 15px;
 }
+.top-row .control-group:last-child {
+    flex: 1;
+    min-width: 200px; /* Ancho mínimo seguro para móviles */
+    justify-content: flex-end;
+}
+
+.top-row input[type="range"] {
+    width: 100%; /* El slider se adapta al ancho disponible */
+    max-width: 150px;
+}
 
 /* --- LISTA DE PISTAS (GRID) --- */
 #track-list {
-    display: grid;
-    /* Crea columnas automáticas. Ajusta 300px si quieres que sean más estrechas */
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 15px;
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); 
+    gap: 12px;
     width: 100%;
+    box-sizing: border-box;
 }
 
-/* Cada fila de instrumento es su propio Grid interno */
+/* Reducimos el ancho del botón para darle más espacio al slider */
 .instrument-row {
     display: grid;
-    grid-template-columns: 140px 1fr; /* 140px botón, resto slider */
+    grid-template-columns: 110px 1fr; /* Antes tenía 140px */
     align-items: center;
     gap: 10px;
-    padding: 5px;
+    padding: 5px 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .btn-instrument {
