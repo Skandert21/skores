@@ -109,6 +109,18 @@
     { 
       "nombre": "Usted", 
       "url": "#" 
+    },
+     { 
+      "nombre": "Silencio", 
+      "url": "alogena/Silencio" 
+    },
+     { 
+      "nombre": "Acelerando", 
+      "url": "alogena/Acelerando" 
+    },
+     { 
+      "nombre": "Tiempo", 
+      "url": "alogena/Tiempo" 
     }
   ],
 "Naufragio": [ 
